@@ -31,6 +31,14 @@ struct SettingsView: View {
                 }
             }
 
+            Section("Away Guard (beta)") {
+                Toggle(L("Gizlilik ekranına ek olarak ekranı kilitle", "Also lock the screen (password / Touch ID)"), isOn: $settings.awayAlsoLock)
+                Text(L("Gizlilik ekranı gerçek bir kilit değil, sadece ekranı örter. Kısayol: ⌃⌥P ile elle gizle/göster.",
+                       "The privacy screen is not a real lock, it only covers the display. Shortcut: ⌃⌥P to hide/show manually."))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             Section(L("Sesli not", "Voice note")) {
                 Toggle(L("Notlar'a otomatik kaydet", "Auto-save to Notes"), isOn: $voice.autoSaveToNotes)
                 Text(L("Kısayol: ⌃⌥N (kaydı başlat/durdur)", "Shortcut: ⌃⌥N (start/stop recording)"))
@@ -45,7 +53,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 380, height: 400)
+        .frame(width: 380, height: 470)
     }
 }
 

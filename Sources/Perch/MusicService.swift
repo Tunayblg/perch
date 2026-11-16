@@ -29,12 +29,28 @@ final class MusicService: ObservableObject {
     private var source: Source?
     private let queue = DispatchQueue(label: "music.applescript")
     private var timer: Timer?
+    private var pollCount = 0
+    /// İlerleme çubuğunu gösteren görünüm sayısı (panel/gizlilik ekranı). 0 iken ilerleme güncellenmez.
+    private(set) var progressObservers = 0
+
+    func beginProgress() {
+        progressObservers += 1
+        refreshNow()
+    }
+
+    func endProgress() {
+        progressObservers = max(progressObservers - 1, 0)
+    }
 
     func start() {
         refreshNow()
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            self?.refreshNow()
+            guard let self else { return }
+            self.pollCount += 1
+            // Çalarken saniyede bir (ilerleme çubuğu için), değilken 3 sn'de bir
+            if (self.isPlaying && self.progressObservers > 0) || self.pollCount % 3 == 0 { self.refreshNow() }
         }
+        timer?.tolerance = 0.3
     }
 
     func refreshNow() {
@@ -118,14 +134,18 @@ final class MusicService: ObservableObject {
             source = nil
             return
         }
+        let trackChanged = title != info.title
         source = info.source
         sourceName = info.source.rawValue
         hasTrack = true
         isPlaying = info.playing
         title = info.title
         artist = info.artist
-        position = info.position
-        duration = info.duration
+        // İlerleme yalnızca görünürken ya da parça değişince güncellenir (kapalı çentikte gereksiz çizim olmasın)
+        if progressObservers > 0 || trackChanged {
+            position = info.position
+            duration = info.duration
+        }
         if artworkURL != info.artwork { artworkURL = info.artwork }
     }
 

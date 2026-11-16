@@ -58,7 +58,9 @@ final class NotchController {
     let voice = VoiceNoteService()
     let stats = StatsService()
     let clipboard = ClipboardService()
+    let awayGuard = AwayGuardService()
     private var hotKey: GlobalHotKey?
+    private var privacyHotKey: GlobalHotKey?
 
     private var panel: NSPanel!
     private var screen: NSScreen!
@@ -88,7 +90,7 @@ final class NotchController {
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         panel.isMovable = false
 
-        let host = NSHostingView(rootView: NotchView(state: state, music: music, planner: planner, todos: todos, shelf: shelf, voice: voice, stats: stats, clipboard: clipboard))
+        let host = NSHostingView(rootView: NotchView(state: state, music: music, planner: planner, todos: todos, shelf: shelf, voice: voice, stats: stats, clipboard: clipboard, awayGuard: awayGuard))
         host.layer?.backgroundColor = .clear
         panel.contentView = host
         panel.orderFrontRegardless()
@@ -118,6 +120,8 @@ final class NotchController {
         // Geri sayım varken kapalı çentik iki yana genişleyip süreyi gösterir.
         planner.$timers.combineLatest(planner.$phase, music.$isPlaying, voice.$isRecording)
             .map { !$0.isEmpty || $1 != .idle || $2 || $3 }
+            .combineLatest(awayGuard.$countdown.map { $0 != nil })
+            .map { $0 || $1 }
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] active in self?.setBadge(active) }
@@ -135,7 +139,16 @@ final class NotchController {
             self.voice.toggle()
         }
 
+        // ⌃⌥P: ekranı elle gizle / göster (Away Guard için acil çıkış de budur)
+        privacyHotKey = GlobalHotKey(keyCode: kVK_ANSI_P, modifiers: controlKey | optionKey) { [weak self] in
+            self?.awayGuard.toggleManual()
+        }
+
         planner.onAlert = { [weak self] in self?.flash() }
+        // Away Guard geri sayımı başlayınca panel kendiliğinden açılır (iptal edebilmen için)
+        awayGuard.music = music
+        awayGuard.planner = planner
+        awayGuard.onCountdownStart = { [weak self] in self?.flash(.awayGuard, hold: Double(AwayGuardService.countdownSeconds) + 2) }
 
         music.start()
         clipboard.start()
@@ -261,7 +274,9 @@ final class NotchController {
                 scheduleCollapse()
             }
         } else {
-            // Kapalıyken: çentiğin hemen üstü/çevresi tetikler
+            // Kapalıyken: çentikten uzaktaysa hemen çık (çoğu fare hareketi burada biter)
+            if !dragging, p.y < screen.frame.maxY - state.collapsedSize.height - 12 { return }
+            // çentiğin hemen üstü/çevresi tetikler
             var trigger = frame(expanded: false).insetBy(dx: -8, dy: -4)
             trigger.size.height += 20 // ekran kenarına kadar
             if trigger.contains(p) {
@@ -276,11 +291,11 @@ final class NotchController {
     }
 
     /// Süre bitince panel kendiliğinden açılıp zamanlayıcı sekmesini gösterir.
-    private func flash() {
-        state.select(.timer)
-        pinnedUntil = Date().addingTimeInterval(6)
+    private func flash(_ tab: NotchTab = .timer, hold: TimeInterval = 6) {
+        state.select(tab)
+        pinnedUntil = Date().addingTimeInterval(hold)
         setExpanded(true)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 6.2) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + hold + 0.2) { [weak self] in
             self?.mouseChanged()
         }
     }
@@ -302,10 +317,12 @@ final class NotchController {
         if value {
             panel.setFrame(frame(expanded: true), display: true)
             state.expanded = true
-            music.refreshNow()
+            music.beginProgress()
         } else {
             panel.makeFirstResponder(nil)
             state.expanded = false
+            music.endProgress()
+            awayGuard.panelClosed()
             // Animasyon bitince pencereyi küçült ki altındaki tıklamaları engellemesin
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 guard let self, !self.state.expanded else { return }

@@ -19,6 +19,10 @@ final class AppSettings: ObservableObject {
     @Published var restMinutes: Int {
         didSet { UserDefaults.standard.set(restMinutes, forKey: "restMinutes") }
     }
+    /// Away Guard: gizlilik ekranına ek olarak gerçek ekran kilidi de at (parola/Touch ID ister).
+    @Published var awayAlsoLock: Bool {
+        didSet { UserDefaults.standard.set(awayAlsoLock, forKey: "awayAlsoLock") }
+    }
     @Published var accent: AccentChoice {
         didSet { UserDefaults.standard.set(accent.rawValue, forKey: "accent") }
     }
@@ -39,6 +43,7 @@ final class AppSettings: ObservableObject {
         workMinutes = work > 0 ? work : 25
         restMinutes = rest > 0 ? rest : 5
         accent = AccentChoice(rawValue: d.string(forKey: "accent") ?? "") ?? .white
+        awayAlsoLock = d.bool(forKey: "awayAlsoLock")
 
         // Kayıtlı sıra + sonradan eklenen yeni sekmeler
         var order = (d.stringArray(forKey: "tabOrder") ?? []).compactMap(NotchTab.init(rawValue:))
@@ -55,7 +60,7 @@ final class AppSettings: ObservableObject {
     /// Ayarlar sekmesi her zaman görünür (kilitlenmemek için).
     func isVisible(_ tab: NotchTab) -> Bool { tab == .settings || !hiddenTabs.contains(tab) }
 
-    var visibleTabs: [NotchTab] { tabOrder.filter(isVisible) }
+    var visibleTabs: [NotchTab] { tabsOverride ?? tabOrder.filter(isVisible) }
 
     func toggle(_ tab: NotchTab) {
         guard tab != .settings else { return }
@@ -69,8 +74,14 @@ final class AppSettings: ObservableObject {
         tabOrder.swapAt(i, j)
     }
 
+    // Önizleme üretimi için bellek içi geçersiz kılmalar (kullanıcı ayarlarına dokunmaz, kaydedilmez)
+    var languageOverride: AppLanguage?
+    var accentOverride: AccentChoice?
+    var tabsOverride: [NotchTab]?
+    var effectiveAccent: AccentChoice { accentOverride ?? accent }
+
     var isTurkish: Bool {
-        switch language {
+        switch languageOverride ?? language {
         case .tr: return true
         case .en: return false
         case .system: return Locale.preferredLanguages.first?.hasPrefix("tr") ?? false

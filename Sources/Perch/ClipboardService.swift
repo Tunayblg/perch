@@ -25,7 +25,8 @@ final class ClipboardService: ObservableObject {
     ]
 
     func start() {
-        timer = Timer.scheduledTimer(withTimeInterval: 0.6, repeats: true) { [weak self] _ in self?.poll() }
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in self?.poll() }
+        timer?.tolerance = 0.4
     }
 
     private func poll() {

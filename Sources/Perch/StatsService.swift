@@ -4,25 +4,28 @@ import IOKit.ps
 
 /// CPU, RAM, ağ, pil ve disk bilgisi. Yalnızca "Sistem" sekmesi görünürken örnekler (enerji tasarrufu).
 final class StatsService: ObservableObject {
-    @Published private(set) var cpu: Double = 0            // 0...1
-    @Published private(set) var memUsed: UInt64 = 0
+    @Published var cpu: Double = 0            // 0...1
+    @Published var memUsed: UInt64 = 0
     let memTotal = ProcessInfo.processInfo.physicalMemory
-    @Published private(set) var netDown: Double = 0        // bayt/sn
-    @Published private(set) var netUp: Double = 0
-    @Published private(set) var downHistory: [Double] = Array(repeating: 0, count: 40)
-    @Published private(set) var upHistory: [Double] = Array(repeating: 0, count: 40)
-    @Published private(set) var batteryPercent: Int?
-    @Published private(set) var isCharging = false
-    @Published private(set) var diskFree: Int64 = 0
-    @Published private(set) var diskTotal: Int64 = 0
+    @Published var netDown: Double = 0        // bayt/sn
+    @Published var netUp: Double = 0
+    @Published var downHistory: [Double] = Array(repeating: 0, count: 40)
+    @Published var upHistory: [Double] = Array(repeating: 0, count: 40)
+    @Published var batteryPercent: Int?
+    @Published var isCharging = false
+    @Published var diskFree: Int64 = 0
+    @Published var diskTotal: Int64 = 0
 
     private var timer: Timer?
     private var prevTicks: (user: UInt64, system: UInt64, idle: UInt64, nice: UInt64)?
     private var prevNet: [String: (rx: UInt32, tx: UInt32)] = [:]
     private var prevDate: Date?
 
+    /// Önizleme görüntüsü üretilirken true: gerçek ölçüm yapılmaz, örnek değerler korunur.
+    var isPreview = false
+
     func start() {
-        guard timer == nil else { return }
+        guard !isPreview, timer == nil else { return }
         prevTicks = nil
         prevNet = [:]
         prevDate = nil

@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// Üstü düz (ekrana yapışık), altı yuvarlak köşeli çentik şekli.
@@ -34,6 +35,7 @@ struct NotchView: View {
     @ObservedObject var voice: VoiceNoteService
     @ObservedObject var stats: StatsService
     @ObservedObject var clipboard: ClipboardService
+    @ObservedObject var awayGuard: AwayGuardService
     @ObservedObject var settings = AppSettings.shared
 
     var body: some View {
@@ -54,6 +56,7 @@ struct NotchView: View {
                         case .shelf: ShelfPanel(store: shelf)
                         case .stats: StatsPanel(stats: stats)
                         case .clipboard: ClipboardPanel(clipboard: clipboard)
+                        case .awayGuard: AwayGuardPanel(away: awayGuard)
                         case .settings: SettingsPanel()
                         }
                     }
@@ -73,6 +76,9 @@ struct NotchView: View {
                 if voice.isRecording {
                     collapsedBadge(icon: "mic.fill", text: PlannerService.format(voice.elapsed), tint: .red)
                         .transition(.opacity)
+                } else if let c = awayGuard.countdown {
+                    collapsedBadge(icon: "lock.fill", text: "\(c)", tint: .orange)
+                        .transition(.opacity)
                 } else if let badge = planner.badge {
                     collapsedBadge(icon: badge.icon, text: badge.text)
                         .transition(.opacity)
@@ -87,7 +93,7 @@ struct NotchView: View {
         .animation(.smooth(duration: 0.42), value: state.expanded)
         .animation(.smooth(duration: 0.36), value: state.showsBadge)
         .animation(.smooth(duration: 0.36), value: size.width)
-        .environment(\.accent, settings.accent.color)
+        .environment(\.accent, settings.effectiveAccent.color)
         .id(settings.language) // dil değişince tüm arayüz yeniden kurulur
     }
 
@@ -114,7 +120,7 @@ struct NotchView: View {
         return Button { state.select(tab) } label: {
             Image(systemName: tab.symbol)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(active ? settings.accent.color : .white.opacity(0.4))
+                .foregroundStyle(active ? settings.effectiveAccent.color : .white.opacity(0.4))
                 .frame(width: 26, height: 24)
                 .background(active ? Color.white.opacity(0.14) : .clear, in: Capsule())
                 .contentShape(Rectangle())
@@ -267,27 +273,77 @@ struct MusicPanel: View {
 
 
 /// Ses çubukları animasyonu (çalarken sağ rozet).
-struct EqualizerBars: View {
+struct EqualizerBars: NSViewRepresentable {
     @Environment(\.accent) private var accent
-    private let phases: [Double] = [0.0, 1.3, 2.4, 0.7]
-    private let speeds: [Double] = [5.2, 6.6, 4.4, 7.3]
 
-    var body: some View {
-        TimelineView(.animation) { context in
-            let t = context.date.timeIntervalSinceReferenceDate
-            HStack(spacing: 2.5) {
-                ForEach(0..<4, id: \.self) { i in
-                    let h = 5 + 11 * abs(sin(t * speeds[i] * 0.6 + phases[i]))
-                    Capsule()
-                        .fill(accent)
-                        .frame(width: 3, height: h)
-                }
-            }
-            .frame(height: 18)
-        }
+    func makeNSView(context: Context) -> EqualizerNSView { EqualizerNSView() }
+
+    func updateNSView(_ view: EqualizerNSView, context: Context) {
+        view.color = NSColor(accent)
     }
 }
 
+/// Ses çubukları: animasyonu Core Animation (sistemin çizim sunucusu) yürütür; uygulama her karede
+/// kod çalıştırmaz, bu yüzden müzik saatlerce çalsa bile CPU/pil maliyeti neredeyse sıfırdır.
+final class EqualizerNSView: NSView {
+    var color: NSColor = .white {
+        didSet { bars.forEach { $0.backgroundColor = color.cgColor } }
+    }
+
+    private var bars: [CALayer] = []
+    private let durations: [CFTimeInterval] = [0.46, 0.58, 0.40, 0.66]
+    private let offsets: [CFTimeInterval] = [0.0, 0.17, 0.31, 0.08]
+    private let barWidth: CGFloat = 3
+    private let gap: CGFloat = 2.5
+    private let barHeight: CGFloat = 16
+
+    override init(frame: NSRect) {
+        super.init(frame: frame)
+        wantsLayer = true
+        for _ in 0..<4 {
+            let l = CALayer()
+            l.backgroundColor = color.cgColor
+            l.cornerRadius = barWidth / 2
+            layer?.addSublayer(l)
+            bars.append(l)
+        }
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func layout() {
+        super.layout()
+        let total = CGFloat(bars.count) * barWidth + CGFloat(bars.count - 1) * gap
+        let startX = (bounds.width - total) / 2
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        for (i, l) in bars.enumerated() {
+            l.frame = CGRect(x: startX + CGFloat(i) * (barWidth + gap),
+                             y: (bounds.height - barHeight) / 2, width: barWidth, height: barHeight)
+        }
+        CATransaction.commit()
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if window != nil { startAnimating() } else { bars.forEach { $0.removeAllAnimations() } }
+    }
+
+    private func startAnimating() {
+        for (i, l) in bars.enumerated() {
+            l.removeAllAnimations()
+            let a = CABasicAnimation(keyPath: "transform.scale.y")
+            a.fromValue = 0.3
+            a.toValue = 1.0
+            a.duration = durations[i]
+            a.autoreverses = true
+            a.repeatCount = .infinity
+            a.timeOffset = offsets[i]
+            a.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            l.add(a, forKey: "bounce")
+        }
+    }
+}
 
 /// Sekme geçişi: eski içerik kayıp solar, yenisi aynı yönden kayarak gelir.
 struct SlideFade: ViewModifier {

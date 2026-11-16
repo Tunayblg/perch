@@ -43,9 +43,15 @@ final class PlannerService: ObservableObject {
             center.delegate = notificationDelegate
             center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
         }
+    }
+
+    /// Saat yalnızca bir zamanlayıcı ya da Pomodoro çalışırken döner (boştayken işlemciyi uyandırmaz).
+    private func ensureTicker() {
+        guard ticker == nil else { return }
         ticker = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             self?.tick()
         }
+        ticker?.tolerance = 0.15
     }
 
     // MARK: - Eylemler
@@ -53,6 +59,7 @@ final class PlannerService: ObservableObject {
     func addTimer(minutes: Int) {
         let total = TimeInterval(minutes * 60)
         timers.append(CountdownTimer(total: total, endDate: Date().addingTimeInterval(total)))
+        ensureTicker()
     }
 
     func removeTimer(_ id: UUID) {
@@ -63,6 +70,7 @@ final class PlannerService: ObservableObject {
         if phase == .idle {
             phase = .work
             phaseEnd = Date().addingTimeInterval(workDuration)
+            ensureTicker()
         } else {
             phase = .idle
             phaseEnd = nil
@@ -134,6 +142,14 @@ final class PlannerService: ObservableObject {
             case .idle:
                 break
             }
+        }
+        stopTickerIfIdle()
+    }
+
+    private func stopTickerIfIdle() {
+        if timers.isEmpty, phase == .idle {
+            ticker?.invalidate()
+            ticker = nil
         }
     }
 

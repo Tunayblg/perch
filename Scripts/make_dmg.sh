@@ -2,7 +2,7 @@
 # Dağıtım için .dmg üretir: ./Scripts/make_dmg.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
-VERSION="${VERSION:-1.0.0}"
+VERSION="${VERSION:-1.1.0}"
 
 VERSION="$VERSION" ./Scripts/build_app.sh
 

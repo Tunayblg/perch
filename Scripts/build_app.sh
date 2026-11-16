@@ -3,7 +3,7 @@
 # Sürüm değiştirmek için: VERSION=1.1.0 ./Scripts/build_app.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
-VERSION="${VERSION:-1.0.0}"
+VERSION="${VERSION:-1.1.0}"
 
 swift build -c release
 BIN="$(swift build -c release --show-bin-path)/Perch"
@@ -31,6 +31,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>LSUIElement</key><true/>
   <key>NSAppleEventsUsageDescription</key>
   <string>Çentikte çalan şarkıyı göstermek, müziği kontrol etmek ve sesli notları Notlar'a kaydetmek için Spotify, Music ve Notlar ile konuşmam gerekiyor. / Needed to show and control Spotify/Music playback and to save voice notes to Notes.</string>
+  <key>NSBluetoothAlwaysUsageDescription</key>
+  <string>Away Guard (beta): iPhone / Apple Watch'unun sinyal gücüne bakarak yanından ayrıldığını anlamak için Bluetooth'u kullanıyorum. / Away Guard (beta): uses Bluetooth signal strength of your iPhone / Apple Watch to know when you step away.</string>
   <key>NSMicrophoneUsageDescription</key>
   <string>Sesli not kaydetmek için mikrofona erişmem gerekiyor. / Needed to record voice notes.</string>
   <key>NSSpeechRecognitionUsageDescription</key>

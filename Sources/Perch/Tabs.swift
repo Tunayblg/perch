@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Panelin sekmeleri.
 enum NotchTab: String, CaseIterable, Codable, Identifiable {
-    case music, timer, voice, todo, shelf, stats, clipboard, settings
+    case music, timer, voice, todo, shelf, stats, clipboard, awayGuard, settings
 
     var id: String { rawValue }
 
@@ -15,6 +15,7 @@ enum NotchTab: String, CaseIterable, Codable, Identifiable {
         case .shelf: return "tray.fill"
         case .stats: return "cpu"
         case .clipboard: return "doc.on.clipboard"
+        case .awayGuard: return "lock.shield.fill"
         case .settings: return "gearshape.fill"
         }
     }
@@ -28,6 +29,7 @@ enum NotchTab: String, CaseIterable, Codable, Identifiable {
         case .shelf: return L("Raf / AirDrop", "Shelf / AirDrop")
         case .stats: return L("Sistem", "System")
         case .clipboard: return L("Pano geçmişi", "Clipboard")
+        case .awayGuard: return "Away Guard (beta)"
         case .settings: return L("Ayarlar", "Settings")
         }
     }
