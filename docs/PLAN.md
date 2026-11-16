@@ -3,7 +3,7 @@
 > MacBook çentiğini (notch) müzik çalar + günlük planlayıcıya çeviren, native macOS uygulaması.
 > **Not:** Bu proje iPhone için değil, **MacBook (macOS)** içindir.
 
-Durum: **v0.1 (müzik) ve v0.2 (zamanlayıcı + Pomodoro) yazıldı**, kullanıcı testinde. v0.3 (yapılacaklar), dosya rafı + AirDrop ve v0.4 (sesli not) yazıldı. **v1.0 cila yazıldı** (ayarlar, TR/EN, menü çubuğu, ikon, README, .dmg, MIT). Away Guard araştırması tamam, sıradaki: kilitsiz prototip (canlı RSSI grafiği) ile yürüme testi.
+Durum: **v0.1 (müzik) ve v0.2 (zamanlayıcı + Pomodoro) yazıldı**, kullanıcı testinde. v0.3 (yapılacaklar), dosya rafı + AirDrop ve v0.4 (sesli not) yazıldı. **v1.0 cila yazıldı** (ayarlar, TR/EN, menü çubuğu, ikon, README, .dmg, MIT). **Away Guard beta yazıldı (v1.1.0):** gizlilik ekranı, 3 hassasiyet seviyesi, öğrenen taban sinyal, widget'lar. Sıradaki: gerçek yürüme testleri, Touch ID ile açma, hareket sensörü.
 
 ---
 

@@ -6,7 +6,7 @@
 
 **Çentiğin artık iş görüyor.**
 
-MacBook çentiğini müzik çalar, zamanlayıcı, yapılacaklar listesi, sesli not defteri, dosya rafı ve sistem monitörüne çeviren, küçük ve native bir macOS uygulaması. Hepsi tek bir fare hareketi uzağında.
+MacBook çentiğini müzik çalar, zamanlayıcı, yapılacaklar listesi, sesli not defteri, dosya rafı ve sistem monitörüne çeviren, küçük ve native bir macOS uygulaması. Üstüne **Away Guard**: yanından kalkınca ekranını örten, döndüğün anda buharlaşarak açılan bir gizlilik ekranı.
 
 ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black?logo=apple)
 ![Swift 5.9](https://img.shields.io/badge/Swift-5.9-F05138?logo=swift&logoColor=white)
@@ -15,9 +15,35 @@ MacBook çentiğini müzik çalar, zamanlayıcı, yapılacaklar listesi, sesli n
 
 [English](README.md) · **Türkçe**
 
+<img src="docs/screenshots/tr/music.png" width="760" alt="Perch müzik paneli çentikte">
+
 </div>
 
-<!-- Demo GIF'i çekince buraya ekle:  ![Perch demo](docs/demo.gif)  -->
+---
+
+## 🛡️ Away Guard: sen kalkınca ekranın kenara çekilir `beta`
+
+Kafede, açık ofiste ya da ortak evde mi çalışıyorsun? Mac'inin başından kalktığında Perch ekranını sessizce örter. Döndüğünde örtü **kenarlardan merkeze doğru buhar gibi dağılır** ve her uygulama bıraktığın yerde durur. Kamera yok, parola derdi yok, ek donanım yok.
+
+<div align="center">
+<img src="docs/screenshots/tr/privacy-screen.png" width="760" alt="Away Guard gizlilik ekranı: saat, dalda kuş ve çalan müzik widget'ı">
+</div>
+
+<div align="center">
+<img src="docs/screenshots/tr/away-guard.png" width="760" alt="Away Guard paneli: canlı sinyal grafiği ve hassasiyet seçici">
+</div>
+
+**Neyi farklı yapıyor**
+
+- **Senin "normalini" öğreniyor.** Sihirli bir dBm sayısı yerine Perch, iPhone'unun ya da Apple Watch'unun sinyalinin *masandayken* ne kadar güçlü olduğunu ölçer ve ondan düşünce harekete geçer. Her cihaza ve her masaya uyum sağlar. Sen sadece **Düşük, Orta ya da Yüksek** seçersin.
+- **Hâlâ orada olduğunu biliyor.** Yazıyor, fareyi oynatıyor, video izliyor ya da görüşmedeysen Perch yolundan çekilir. Sadece gerçekten gittiğinde devreye girer.
+- **Örter, kilitlemez.** Saat, dalda tünemiş bir kuş ve canlı widget'larla (kontrollü çalan müzik, çalışan zamanlayıcılar) sakin bir gizlilik ekranı. Altındaki hiçbir şeye dokunulmaz, yani yazdığını kaybetmez, yeniden oturum açmazsın.
+- **Anında açılıyor.** Cihazın menzile girdiği an ekran yine senin. Bekleme yok, tıklama yok.
+- **Pil dostu.** Arka planda tarama kısa aralıklarla yapılır, koruma kapalıyken hiç yapılmaz. Apple Silicon bir MacBook Air'de yaptığım ölçümlerde koruma açıkken yaklaşık **%0,5 CPU** harcıyor, gizlilik ekranı animasyonu da sadece belirirken ve kaybolurken yaklaşık bir saniye çalışıyor.
+- **Tasarımdan gizli.** Yalnızca Bluetooth sinyal gücü okunur: kamera yok, mikrofon yok, hesap yok, Mac'inden hiçbir şey çıkmaz.
+- **Kontrol sende.** `⌃⌥P` ekranı elle gizler ya da açar (Watch'unun şarjı bitse bile acil çıkış budur). İstersen Ayarlar'dan gerçek ekran kilidini de açabilirsin.
+
+> **Dürüst sınırlar (bu bir beta).** Gizlilik ekranı bir örtüdür, kilit değildir; fiziksel erişimi olan ve kısayolu bilen biri kaldırabilir. Bluetooth sinyal gücü yaklaşıktır: duvarlar, cepler ve vücut konumu etkiler. Telefonun masada kalırsa Mac seni yakında sanar. Mac'inin zaten tanıdığı Apple cihazlarıyla çalışır.
 
 ---
 
@@ -25,15 +51,16 @@ MacBook çentiğini müzik çalar, zamanlayıcı, yapılacaklar listesi, sesli n
 
 Çentik boş bir alan. Perch ona bir iş veriyor. Fareyi çentiğe götürünce açılıyor, çekince yolundan çekiliyor. Dock simgesi yok, pencere yok, abonelik yok, hesap yok.
 
-Çoğu çentik uygulaması müzik ve dosya rafına odaklanıyor. Perch bunların yanına **zaman ve planlama araçlarını** ekliyor: Pomodoro, zamanlayıcı, yapılacaklar ve **Apple Notlar'a düşen sesli not**. Hepsi tek, hafif (~60 MB RAM) bir uygulamada.
+Çoğu çentik uygulaması müzik ve dosya rafına odaklanıyor. Perch bunların yanına **zaman ve planlama araçlarını** (Pomodoro, zamanlayıcı, yapılacaklar, **Apple Notlar'a düşen sesli not**) ve çentiğe yerleşik bir **gizlilik koruması** ekliyor. Hepsi tek, hafif bir uygulamada.
 
 ## Perch'ü ayıran şeyler
 
+- **Away Guard.** iPhone'unu ya da Watch'unu izleyen, masanı öğrenen ve döndüğünde dağılan bir gizlilik ekranı.
 - **Sadece müzik değil, planlama.** Zamanlayıcı, Pomodoro ve yapılacaklar müziğin yanında çentikte durur; çentik "şu an çalan" kutusundan küçük bir komuta merkezine dönüşür.
 - **Ses → Apple Notlar → iPhone.** Tek bir genel kısayolla bir düşünceyi yakala. Cihaz içinde yazıya çevrilir ve tüm Apple cihazlarındaki Notlar'da görünür.
 - **Tasarımdan gizli.** Cihaz içi konuşma tanıma, parola yöneticisi kopyalarını atlayan ve yalnızca bellekte tutulan pano, hesap yok, telemetri yok.
 - **Ücretsiz ve dürüst.** Reklam yok, "yükselt" afişi yok, abonelik yok. MIT lisanslı.
-- **Küçük ve bağımlılıksız.** Yaklaşık 2.600 satır Swift, ~60 MB RAM. Uygulamadan başka kurulacak bir şey yok.
+- **Küçük ve bağımlılıksız.** Saf Swift, yaklaşık 4.000 satır, ~30 ile 70 MB RAM. Uygulamadan başka kurulacak bir şey yok.
 - **Sana göre şekillenir.** Sekmeleri gizle ve sırala, vurgu rengi seç, sekmeler arasında kaydır, Türkçe / İngilizce arasında geç.
 - **Türkçe ilk sınıf.** Tam Türkçe arayüz ve cihaz içi Türkçe dikte, sonradan eklenmiş bir şey değil.
 
@@ -41,6 +68,7 @@ MacBook çentiğini müzik çalar, zamanlayıcı, yapılacaklar listesi, sesli n
 
 | | |
 |---|---|
+| 🛡️ **Away Guard** *(beta)* | iPhone ya da Apple Watch uzaklaşınca ekranını, çalan müzik ve zamanlayıcı widget'larıyla birlikte örten, döndüğünde anında açan gizlilik ekranı. Üç hassasiyet seviyesi, normal sinyalini öğrenir, Mac'i kullanırken asla devreye girmez. |
 | 🎵 **Müzik** | Spotify ve Apple Music: kapak, ilerleme, geri / oynat / ileri. Şarkı çalarken kapalı çentik iki yana uzar: bir yanda kapak, diğer yanda canlı ses çubukları. |
 | ⏱ **Zamanlayıcı ve Pomodoro** | Aynı anda birden fazla zamanlayıcı (5 / 10 / 15 / 30 dk) ve süreleri ayarlanabilen Pomodoro döngüsü. Geri sayım çentiğin *içinde* görünür; süre dolunca panel kendiliğinden açılır, ses çalar, bildirim gelir. |
 | 🎙 **Sesli not** | Her yerden `⌃⌥N`'e bas, konuş, tekrar bas. Konuşma **cihaz içinde** yazıya çevrilir ve **Apple Notlar'a** kaydedilir; iCloud ile iPhone'unda da görünür. Ses dosyası Mac'inde kalır. |
@@ -51,6 +79,13 @@ MacBook çentiğini müzik çalar, zamanlayıcı, yapılacaklar listesi, sesli n
 | ⚙️ **Sana göre** | Sekmeleri gizle ve sırala, vurgu rengi seç, Türkçe / İngilizce arasında geç, oturum açılınca başlat. Çentiğin üstünde iki parmakla kaydırarak sekme değiştir. |
 
 Çentiği **olmayan** Mac'lerde de çalışır, ekranın üstünde küçük bir yüzen kapsül olarak.
+
+<div align="center">
+<img src="docs/screenshots/tr/timer.png" width="49%" alt="Zamanlayıcı ve Pomodoro sekmesi"> <img src="docs/screenshots/tr/system.png" width="49%" alt="Sistem monitörü sekmesi">
+<img src="docs/screenshots/tr/settings.png" width="60%" alt="Sekme özelleştirme ve vurgu renkleri olan ayarlar sekmesi">
+</div>
+
+<sub>Görüntüler uygulamanın kendi arayüz kodundan örnek verilerle üretilmiştir (`./Scripts/render_previews.sh`), bu yüzden içlerinde kişisel bilgi yoktur.</sub>
 
 ## Kurulum
 
@@ -71,9 +106,17 @@ Dock simgesi yoktur. Ayarlar ve Çıkış menü çubuğundaki simgede (ve Perch'
 git clone https://github.com/Tunayblg/perch.git
 cd perch
 ./Scripts/build_app.sh     # → build/Perch.app
-./Scripts/make_dmg.sh      # → build/Perch-1.0.0.dmg
+./Scripts/make_dmg.sh      # → build/Perch-1.1.0.dmg
 open build/Perch.app
 ```
+
+## Kısayollar
+
+| Kısayol | Ne yapar |
+|---|---|
+| `⌃⌥N` | Sesli notu başlat / durdur |
+| `⌃⌥P` | Ekranı gizle / göster (gizlilik ekranı, aynı zamanda Away Guard'ın acil çıkışı) |
+| Çentiğin üstünde iki parmakla kaydır | Sekme değiştir |
 
 ## İzinler
 
@@ -85,43 +128,46 @@ Perch, her özellik için yalnızca gereken izni, o özelliği ilk kullandığı
 | Otomasyon → Notlar | Sesli notu kaydetmek |
 | Mikrofon | Sesli not kaydı |
 | Konuşma Tanıma | Cihaz içi yazıya çevirme |
+| Bluetooth | Away Guard: iPhone / Watch sinyal gücünü okumak |
 | Bildirimler | Zamanlayıcı ve Pomodoro uyarıları |
 
 ## Gizlilik
 
 - Hesap yok, analitik yok, telemetri yok.
 - Konuşma **cihaz içinde** yazıya çevrilir; ses Mac'inden çıkmaz.
+- Away Guard yalnızca Bluetooth sinyal gücünü okur. Kamera yok, mikrofon yok, veri toplanmaz.
 - Perch'ün yaptığı tek ağ isteği, albüm kapağını Spotify'ın sunucusundan yüklemek.
 - Pano geçmişi yalnızca bellekte tutulur, uygulama kapanınca silinir.
 
 ## Kaputun altında
 
-Saf Swift, **sıfır üçüncü taraf bağımlılık**, yaklaşık 2.600 satır. Okumaya değer birkaç nokta:
+Saf Swift, **sıfır üçüncü taraf bağımlılık**. Okumaya değer birkaç nokta:
 
 - **Çentik geometrisi:** Gerçek çentik boyutu `NSScreen.safeAreaInsets` ve `auxiliaryTopLeftArea` / `auxiliaryTopRightArea` ile okunur, şekil her modelde donanımla hizalanır.
 - **Üst pencere:** Menü çubuğunun üstünde, her masaüstünde duran kenarlıksız, aktifleşmeyen bir `NSPanel`. Klavye girişi alabilir (yapılacaklar kutusu için) ama o an kullandığın uygulamanın odağını çalmaz.
+- **Away Guard sinyali:** CoreBluetooth yayın paketlerini tarar (eşleşme yok, bağlantı yok) ve cihazının RSSI'ının yavaş hareket eden bir taban değerini *yalnızca sen Mac'i aktif kullanırken* tutar. "Uzakta", kısa vadeli ortalamanın bu tabanın belirli bir dB altına düşmesi demektir; bu sayede her cihaza ve masaya uyum sağlar.
+- **"Hâlâ orada mısın?":** Sistem genelindeki boşta kalma süresi ile IOKit güç tutma kayıtları (video oynatma, görüşmeler) devreye girip girmemeye karar verir.
+- **Gizlilik ekranı:** Koruma seviyesinde tam ekran pencere; klavye girdisini yutar, sonra odağı bulunduğun uygulamaya geri verir. Açılış, merkeze doğru küçülen bulanık bir radyal maskedir; ekran gösterilirken hiçbir şey animasyonlanmaz, yani pil harcamaz.
+- **Pil:** Zamanlayıcılar yalnızca bir şeye ihtiyaç olduğunda çalışır, tarama aralıklıdır, ses çubukları kare kare SwiftUI yerine çizim sunucusunun yürüttüğü bir Core Animation katmanıdır.
 - **Fare ve sürükleme algısı:** Genel `NSEvent` izleyicileri paneli üzerine gelince açar; sürükleme panosuna bakarak yalnızca bir *dosya* sürüklenirken açılır (pencere ya da metin sürüklemede açılmaz).
-- **Sekme kaydırma:** Kaydırma tekeri evreleri tek bir ayrık hareket olarak toplanır, yön sistemin doğal kaydırma ayarına uyar.
 - **Medya köprüsü:** Spotify / Music'e AppleScript; çünkü sistem geneli "şu an çalıyor" API'si macOS 15.4'ten beri kısıtlı.
 - **Ses hattı:** `AVAudioEngine` tap'i hem AAC dosyasına yazar hem de cihaz içi tanıma zorunlu `SFSpeechRecognizer`'a verir; sonuç AppleScript ile Notlar'a gider.
-- **Genel kısayol:** Erişilebilirlik izni gerektirmeyen Carbon `RegisterEventHotKey`.
+- **Genel kısayollar:** Erişilebilirlik izni gerektirmeyen Carbon `RegisterEventHotKey`.
 - **Sistem verisi:** CPU ve bellek için Mach `host_statistics`, ağ sayaçları için `getifaddrs` (32 bit taşma korumalı), pil için IOKit.
-- **Akıcı arayüz:** Görünümler SwiftUI, animasyonlu özel bir çentik `Shape`'i, yönlü sekme geçişleri.
 
 ## Bilinen sınırlar
 
 - Müzik yalnızca Spotify ve Apple Music'ten okunur (tarayıcı / YouTube henüz yok). Apple Music kapağı henüz gösterilmiyor.
+- Away Guard bir beta ve bir gizlilik *örtüsü*, kilit değil. Kaldırmak için cihazın dönmesi ya da `⌃⌥P` gerekir; Touch ID / parola seçeneği planlanıyor.
 - Sesli not Notlar'a **metin** ekler; Notlar'ın betik arayüzü ses eki kabul etmez.
 - Raf dosyaların *yolunu* tutar, dosyaları kopyalamaz.
 - Noter onaylı değil, ilk açılışta *Yine de Aç* adımı gerekir.
 
 ## Yol haritası
 
-**Away Guard (planlı, isteğe bağlı beta):** kafede çalışırken kısa süreliğine kalktın mı? iPhone'un ya da Apple Watch'un menzilden çıkınca Perch ekranını gizler: kilitler, bulanıklaştırır ya da bildirim önizlemelerini saklar. Kamera kullanmayan bir gizlilik yardımcısı, varsayılan olarak kapalı.
+Gizlilik ekranını Touch ID / parolayla kaldırma · Away Guard'a hareket algısı (MacBook taşındı mı) · Saatli alarm · Pomodoro molasında müziği kısma · Takvim (sıradaki toplantıya kalan süre, tek tıkla katıl) · Hatırlatıcılar · Alışkanlık takibi · Tarayıcı müzikleri · Apple Music kapağı · Hızlı "yapay zekâya sor" kutusu
 
-Ayrıca planlı: Saatli alarm · Pomodoro molasında müziği kısma · Takvim (sıradaki toplantıya kalan süre, tek tıkla katıl) · Hatırlatıcılar · Alışkanlık takibi · Tarayıcı müzikleri · Apple Music kapağı · Hızlı "yapay zekâya sor" kutusu
-
-Ayrıntı: [docs/PLAN.md](docs/PLAN.md)
+Ayrıntı: [docs/PLAN.md](docs/PLAN.md) ve Away Guard araştırma notları: [docs/AWAY_GUARD_RESEARCH.md](docs/AWAY_GUARD_RESEARCH.md).
 
 ## Lisans
 
