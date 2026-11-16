@@ -3,7 +3,7 @@
 > MacBook çentiğini (notch) müzik çalar + günlük planlayıcıya çeviren, native macOS uygulaması.
 > **Not:** Bu proje iPhone için değil, **MacBook (macOS)** içindir.
 
-Durum: **v0.1 (müzik) ve v0.2 (zamanlayıcı + Pomodoro) yazıldı**, kullanıcı testinde. v0.3 (yapılacaklar), dosya rafı + AirDrop ve v0.4 (sesli not) yazıldı. **v1.0 cila yazıldı** (ayarlar, TR/EN, menü çubuğu, ikon, README, .dmg, MIT). Sıradaki: gerçek kullanım testi, hatalar, sonra yol haritası (saatli alarm, takvim, Away Guard...).
+Durum: **v0.1 (müzik) ve v0.2 (zamanlayıcı + Pomodoro) yazıldı**, kullanıcı testinde. v0.3 (yapılacaklar), dosya rafı + AirDrop ve v0.4 (sesli not) yazıldı. **v1.0 cila yazıldı** (ayarlar, TR/EN, menü çubuğu, ikon, README, .dmg, MIT). Away Guard araştırması tamam, sıradaki: kilitsiz prototip (canlı RSSI grafiği) ile yürüme testi.
 
 ---
 
@@ -59,10 +59,7 @@ Pazarlama cümlesi: *"Çentiğin hem müzik çalar hem planlayıcın."*
 - Bluetooth sinyali oynak, hassasiyet ayarı gerekir
 - "Gizlilik yardımcısı" olarak pazarlanır, "güvenlik uygulaması" olarak değil
 
-**Önce araştırılacak:**
-1. Eşleşmiş iPhone'un Bluetooth sinyal gücü macOS'ta okunabiliyor mu? (BLEUnlock gibi açık kaynak örnekler)
-2. Apple Watch yakınlığına uygulamadan erişilebiliyor mu?
-3. MacBook hareket sensörüne erişim var mı?
+**Araştırma sonucu (2026-11-16):** Üç sorunun cevabı da **evet**. iPhone ve Apple Watch yakınlığı CoreBluetooth taramasıyla (RSSI) okunabiliyor, MacBook hareket sensörü bu Mac'te root'suz akıyor, ekran kilidi "hemen" ayarıyla çalışıyor. Yürüme testi henüz yapılmadı. Ayrıntı ve önerilen mimari: [AWAY_GUARD_RESEARCH.md](AWAY_GUARD_RESEARCH.md).
 
 ## 3. Sürüm planı
 
