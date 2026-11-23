@@ -288,11 +288,18 @@ private struct OverlayUnlockPanel: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            if model.usesPIN {
+                Text(L("Apple Watch’un şarjı biterse ekranı PIN’le açabilirsin.",
+                       "If your Apple Watch runs out of battery, use your PIN to reveal the screen."))
+                    .font(.system(size: 10))
+                    .foregroundStyle(.white.opacity(0.56))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
-        .overlay { RoundedRectangle(cornerRadius: 16).strokeBorder(.white.opacity(0.12)) }
+        .background(.white.opacity(0.045), in: RoundedRectangle(cornerRadius: 16))
+        .overlay { RoundedRectangle(cornerRadius: 16).strokeBorder(.white.opacity(0.08)) }
         .environment(\.colorScheme, .dark)
         .onChange(of: model.shown) { _, shown in
             if shown && model.verifyPassword != nil { editing = true }
