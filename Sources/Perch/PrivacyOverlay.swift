@@ -27,6 +27,7 @@ final class OverlayModel: ObservableObject {
     @Published var authenticationFailed = false
     var requiresManualUnlock = false
     var verifyPassword: ((String) -> Bool)?
+    var usesPIN = false
     var touchIDAvailable = false
     var requestSystemUnlock: (() -> Void)?
     var music: MusicService?
@@ -43,7 +44,7 @@ final class PrivacyOverlay {
     var isShown: Bool { !windows.isEmpty }
 
     func show(music: MusicService?, planner: PlannerService?, requiresManualUnlock: Bool,
-              verifyPassword: ((String) -> Bool)?, touchIDAvailable: Bool,
+              verifyPassword: ((String) -> Bool)?, usesPIN: Bool, touchIDAvailable: Bool,
               requestSystemUnlock: @escaping () -> Void) {
         guard windows.isEmpty else { return }
         let front = NSWorkspace.shared.frontmostApplication
@@ -54,6 +55,7 @@ final class PrivacyOverlay {
         model.planner = planner
         model.requiresManualUnlock = requiresManualUnlock
         model.verifyPassword = verifyPassword
+        model.usesPIN = usesPIN
         model.touchIDAvailable = touchIDAvailable
         model.requestSystemUnlock = requestSystemUnlock
         self.model = model
@@ -224,23 +226,32 @@ private struct OverlayUnlockPanel: View {
     @State private var rejected = false
     @FocusState private var editing: Bool
 
+    private var canSubmit: Bool {
+        model.usesPIN ? AwayGuardPassword.isValidPIN(password) : !password.isEmpty
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Label(L("Ekranı aç", "Reveal screen"), systemImage: "lock.open")
                 .font(.system(size: 16, weight: .semibold))
             if model.verifyPassword != nil {
-                SecureField(L("Away Guard şifresi", "Away Guard password"), text: $password)
+                SecureField(model.usesPIN ? L("4 rakamlı PIN", "4-digit PIN") : L("Away Guard şifresi", "Away Guard password"),
+                            text: Binding(get: { password }, set: {
+                                password = model.usesPIN ? AwayGuardPassword.pinDigits(in: $0) : $0
+                            }))
                     .focused($editing)
                     .onSubmit(unlock)
                     .onChange(of: password) { _, value in
                         if !value.isEmpty { rejected = false }
                     }
                     .disabled(model.authenticating)
-                Button(L("Şifreyle aç", "Unlock with password"), action: unlock)
+                Button(model.usesPIN ? L("PIN ile aç", "Unlock with PIN") : L("Şifreyle aç", "Unlock with password"),
+                       action: unlock)
                     .buttonStyle(.borderedProminent)
-                    .disabled(password.isEmpty || model.authenticating)
+                    .disabled(!canSubmit || model.authenticating)
                 if rejected {
-                    Text(L("Şifre yanlış. Tekrar dene.", "Incorrect password. Try again."))
+                    Text(model.usesPIN ? L("PIN yanlış. Tekrar dene.", "Incorrect PIN. Try again.")
+                         : L("Şifre yanlış. Tekrar dene.", "Incorrect password. Try again."))
                         .font(.caption)
                         .foregroundStyle(.red)
                 }
@@ -274,7 +285,7 @@ private struct OverlayUnlockPanel: View {
     }
 
     private func unlock() {
-        guard !password.isEmpty, !model.authenticating else { return }
+        guard canSubmit, !model.authenticating else { return }
         let success = model.verifyPassword?(password) == true
         password = ""
         rejected = !success

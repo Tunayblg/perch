@@ -41,7 +41,7 @@ Working in a café, an open office or a shared flat? Walk away from your Mac and
 - **Opens instantly.** The moment your device is back in range the screen is yours again. No waiting, no clicking.
 - **Easy on the battery.** Scanning is duty-cycled in the background and fully off when the guard is off. In my measurements on an Apple-silicon MacBook Air it costs about **0.5% CPU** with protection on, and the privacy-screen animation only runs for about a second while it appears or disappears.
 - **Private by design.** Passive Bluetooth signal-strength reading only: no camera, no microphone, no accounts, nothing leaves your Mac.
-- **You stay in control.** Set or change a password under **Away Guard → Password**. If your Watch or phone dies or Bluetooth is off, enter that password on the right of the privacy screen. Touch ID or your Mac password also works. To hide the screen without a device, click **Hide now** or press `⌃⌥P`.
+- **You stay in control.** Set a four-digit PIN under **Away Guard → PIN**. Use it to reveal the screen without Bluetooth or your Mac password. Touch ID or your Mac password also works. To hide the screen without a device, click **Hide now** or press `⌃⌥P`.
 
 > **Honest limits (it's a beta).** The privacy screen is a cover. To use the macOS screen lock as well, enable the separate option in Settings and use your Mac password or Touch ID. Bluetooth signal strength is approximate: walls, pockets and body position change it. If your phone stays on the desk the Mac thinks you're nearby. Automatic detection works with Apple devices your Mac already recognises.
 
@@ -115,7 +115,7 @@ open build/Perch.app
 | Shortcut | Action |
 |---|---|
 | `⌃⌥N` | Start / stop a voice note |
-| `⌃⌥P` | Show the privacy screen. When covered, focus the unlock panel if you set an Away Guard password, or reveal the screen directly if you haven't. |
+| `⌃⌥P` | Show the privacy screen. When covered, focus the unlock panel if you set an Away Guard PIN or password, or reveal the screen directly if you haven't. |
 | Two-finger swipe over the notch | Switch tabs |
 
 ## Permissions
@@ -158,7 +158,7 @@ Pure Swift, **zero third-party dependencies**. A few things that might be intere
 ## Known limitations
 
 - Music is read from Spotify and Apple Music only (no browser / YouTube yet). Apple Music artwork is not shown yet.
-- After you reveal the screen with the Away Guard password or Mac authentication, automatic covering waits for a fresh nearby signal from your device.
+- After you reveal the screen with the Away Guard PIN or Mac authentication, automatic covering waits for a fresh nearby signal from your device.
 - Voice notes add **text** to Notes; Notes' scripting interface does not accept audio attachments.
 - The file shelf stores file *paths*; it does not copy files.
 - Not notarized, so the first launch needs the *Open Anyway* step.

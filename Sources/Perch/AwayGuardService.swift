@@ -275,7 +275,8 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
         } : nil
         let touchIDAvailable = canUseTouchID(LAContext())
         overlay.show(music: music, planner: planner, requiresManualUnlock: manual,
-                     verifyPassword: verifyPassword, touchIDAvailable: touchIDAvailable,
+                     verifyPassword: verifyPassword, usesPIN: settings.awayUsesPIN,
+                     touchIDAvailable: touchIDAvailable,
                      requestSystemUnlock: { [weak self] in
                          self?.requestSystemUnlock(preferTouchID: touchIDAvailable)
                      })

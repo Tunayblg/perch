@@ -41,7 +41,7 @@ Kafede, açık ofiste ya da ortak evde mi çalışıyorsun? Mac'inin başından 
 - **Anında açılıyor.** Cihazın menzile girdiği an ekran yine senin. Bekleme yok, tıklama yok.
 - **Pil dostu.** Arka planda tarama kısa aralıklarla yapılır, koruma kapalıyken hiç yapılmaz. Apple Silicon bir MacBook Air'de yaptığım ölçümlerde koruma açıkken yaklaşık **%0,5 CPU** harcıyor, gizlilik ekranı animasyonu da sadece belirirken ve kaybolurken yaklaşık bir saniye çalışıyor.
 - **Tasarımdan gizli.** Yalnızca Bluetooth sinyal gücü okunur: kamera yok, mikrofon yok, hesap yok, Mac'inden hiçbir şey çıkmaz.
-- **Kontrol sende.** **Away Guard → Şifre** ile şifreni belirle veya değiştir. Watch ya da telefonun şarjı biterse veya Bluetooth kapanırsa gizlilik ekranının sağındaki alana bu şifreyi gir. Touch ID veya Mac parolası da kullanılabilir. Cihaz seçmeden ekranı gizlemek için **Elle gizle** düğmesine veya `⌃⌥P` kısayoluna bas.
+- **Kontrol sende.** **Away Guard → PIN** bölümünde dört rakamlı bir PIN belirle. Bu PIN, Bluetooth veya Mac parolan olmadan gizlilik örtüsünü kaldırır. Touch ID veya Mac parolası da kullanılabilir. Cihaz seçmeden ekranı gizlemek için **Elle gizle** düğmesine veya `⌃⌥P` kısayoluna bas.
 
 > **Dürüst sınırlar (bu bir beta).** Gizlilik ekranı bir örtüdür. macOS ekran kilidini de kullanmak için Ayarlar’daki ayrı seçeneği etkinleştir ve Mac parolanı veya Touch ID’yi kullan. Bluetooth sinyal gücü yaklaşıktır: duvarlar, cepler ve vücut konumu etkiler. Telefonun masada kalırsa Mac seni yakında sanar. Otomatik algılama Mac'inin tanıdığı Apple cihazlarıyla çalışır.
 
@@ -115,7 +115,7 @@ open build/Perch.app
 | Kısayol | Ne yapar |
 |---|---|
 | `⌃⌥N` | Sesli notu başlat / durdur |
-| `⌃⌥P` | Gizlilik ekranını aç. Örtü açıksa, şifre belirlediysen açma alanını öne getirir. Şifre belirlemediysen örtüyü kaldırır. |
+| `⌃⌥P` | Gizlilik ekranını aç. Örtü açıksa, PIN veya şifre belirlediysen açma alanını öne getirir. Aksi hâlde örtüyü kaldırır. |
 | Çentiğin üstünde iki parmakla kaydır | Sekme değiştir |
 
 ## İzinler
@@ -158,7 +158,7 @@ Saf Swift, **sıfır üçüncü taraf bağımlılık**. Okumaya değer birkaç n
 ## Bilinen sınırlar
 
 - Müzik yalnızca Spotify ve Apple Music'ten okunur (tarayıcı / YouTube henüz yok). Apple Music kapağı henüz gösterilmiyor.
-- Örtüyü Away Guard şifresiyle veya Mac kimlik doğrulamasıyla kaldırdığında otomatik gizleme, cihazından yeni bir yakınlık sinyali gelene kadar bekler.
+- Örtüyü Away Guard PIN’iyle veya Mac kimlik doğrulamasıyla kaldırdığında otomatik gizleme, cihazından yeni bir yakınlık sinyali gelene kadar bekler.
 - Sesli not Notlar'a **metin** ekler; Notlar'ın betik arayüzü ses eki kabul etmez.
 - Raf dosyaların *yolunu* tutar, dosyaları kopyalamaz.
 - Noter onaylı değil, ilk açılışta *Yine de Aç* adımı gerekir.

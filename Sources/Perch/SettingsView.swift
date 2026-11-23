@@ -37,14 +37,14 @@ struct SettingsView: View {
             }
 
             Section("Away Guard (beta)") {
-                Button(settings.hasAwayPassword
-                       ? L("Away Guard şifresini değiştir…", "Change Away Guard password…")
-                       : L("Away Guard şifresi belirle…", "Set an Away Guard password…")) {
+                Button(settings.awayUsesPIN
+                       ? L("Away Guard PIN’ini değiştir…", "Change Away Guard PIN…")
+                       : L("Away Guard için PIN belirle…", "Set an Away Guard PIN…")) {
                     NotificationCenter.default.post(name: .openAwayGuardPassword, object: nil)
                 }
                 Toggle(L("Gizlilik ekranına ek olarak ekranı kilitle", "Also lock the screen (password / Touch ID)"), isOn: $settings.awayAlsoLock)
-                Text(L("⌃⌥P ile gizlilik ekranını aç. Away Guard şifresi yalnızca bu örtüyü kaldırır. macOS kilidi için Mac parolan veya Touch ID gerekir.",
-                       "Press ⌃⌥P to show the privacy curtain. The Away Guard password reveals the screen. Use your Mac password or Touch ID for the macOS lock."))
+                Text(L("⌃⌥P ile gizlilik örtüsünü aç. Away Guard PIN’i örtüyü kaldırır. macOS kilidi için Mac parolan veya Touch ID gerekir.",
+                       "Press ⌃⌥P to show the privacy curtain. The Away Guard PIN reveals the screen. Use your Mac password or Touch ID for the macOS lock."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -103,7 +103,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
                          backing: .buffered, defer: false)
         w.isReleasedWhenClosed = false
         w.delegate = self
-        w.title = L("Away Guard şifresi", "Away Guard password")
+        w.title = "Away Guard PIN"
         w.titleVisibility = .hidden
         w.titlebarAppearsTransparent = true
         w.isMovableByWindowBackground = true
@@ -144,27 +144,29 @@ private struct AwayGuardPasswordEditor: View {
                     .background(.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(L("Away Guard şifresi", "Away Guard password"))
+                    Text("Away Guard PIN")
                         .font(.system(size: 14, weight: .semibold))
                         .accessibilityAddTraits(.isHeader)
-                    Text(L("Bluetooth olmadan da ekranı açar.", "Reveal the screen without Bluetooth."))
+                    Text(L("Mac parolandan ayrı, 4 rakamlı bir PIN.", "A separate 4-digit PIN for Away Guard."))
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }
             }
 
             VStack(spacing: 7) {
-                passwordField(L("Yeni şifre", "New password"), text: $password, field: .password)
+                pinField(L("Yeni PIN", "New PIN"), text: $password, field: .password)
                     .onSubmit { focusedField = .confirmation }
-                passwordField(L("Şifreyi tekrarla", "Confirm password"), text: $confirmation, field: .confirmation)
+                pinField(L("PIN’i tekrarla", "Confirm PIN"), text: $confirmation, field: .confirmation)
                     .onSubmit(save)
             }
 
             HStack(spacing: 10) {
-                Text(error ?? L("En az 4 karakter.", "At least 4 characters."))
-                    .font(.system(size: 11))
-                    .foregroundStyle(error == nil ? Color.secondary : Color.red)
-                    .fixedSize(horizontal: false, vertical: true)
+                if let error {
+                    Text(error)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.red)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 Spacer(minLength: 0)
                 Button(action: save) {
                     Text(L("Kaydet", "Save"))
@@ -187,8 +189,10 @@ private struct AwayGuardPasswordEditor: View {
         .onChange(of: confirmation) { _, _ in error = nil }
     }
 
-    private func passwordField(_ title: String, text: Binding<String>, field: Field) -> some View {
-        SecureField(title, text: text)
+    private func pinField(_ title: String, text: Binding<String>, field: Field) -> some View {
+        SecureField(title, text: Binding(get: { text.wrappedValue }, set: {
+            text.wrappedValue = AwayGuardPassword.pinDigits(in: $0)
+        }))
             .font(.system(size: 13))
             .textFieldStyle(.plain)
             .focused($focusedField, equals: field)
@@ -203,16 +207,16 @@ private struct AwayGuardPasswordEditor: View {
     }
 
     private func save() {
-        guard AwayGuardPassword.isValidLength(password) else {
-            error = L("Şifre 4 ile 128 karakter arasında olmalı.", "Use between 4 and 128 characters.")
+        guard AwayGuardPassword.isValidPIN(password) else {
+            error = L("PIN 4 rakam olmalı.", "Enter a 4-digit PIN.")
             return
         }
         guard password == confirmation else {
-            error = L("Şifreler eşleşmiyor.", "Passwords do not match.")
+            error = L("PIN’ler eşleşmiyor.", "The PINs do not match.")
             return
         }
-        guard settings.setAwayPassword(password) else {
-            error = L("Şifre kaydedilemedi.", "Could not save the password.")
+        guard settings.setAwayPIN(password) else {
+            error = L("PIN kaydedilemedi.", "Could not save the PIN.")
             return
         }
         close()

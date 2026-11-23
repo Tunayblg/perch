@@ -76,10 +76,11 @@ final class AppSettings: ObservableObject {
     }
 
     var hasAwayPassword: Bool { awayPassword != nil }
+    var awayUsesPIN: Bool { awayPassword?.isPIN == true }
 
     @discardableResult
-    func setAwayPassword(_ password: String) -> Bool {
-        guard let verifier = AwayGuardPassword(password: password) else { return false }
+    func setAwayPIN(_ pin: String) -> Bool {
+        guard let verifier = AwayGuardPassword(pin: pin) else { return false }
         UserDefaults.standard.set(verifier.data, forKey: Self.awayPasswordKey)
         awayPassword = verifier
         return true

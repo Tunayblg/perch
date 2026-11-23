@@ -55,7 +55,7 @@ struct AwayGuardPanel: View {
         Button {
             NotificationCenter.default.post(name: .openAwayGuardPassword, object: nil)
         } label: {
-            Label(L("Şifre", "Password"), systemImage: "key.fill")
+            Label("PIN", systemImage: "key.fill")
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.85))
                 .padding(.horizontal, 7)
@@ -63,9 +63,9 @@ struct AwayGuardPanel: View {
                 .notchSurface(in: Capsule(), classic: .white.opacity(0.10), glass: .white.opacity(0.07))
         }
         .buttonStyle(.plain)
-        .help(settings.hasAwayPassword
-              ? L("Away Guard şifresini değiştir", "Change the Away Guard password")
-              : L("Away Guard şifresi belirle", "Set an Away Guard password"))
+        .help(settings.awayUsesPIN
+              ? L("Away Guard PIN’ini değiştir", "Change the Away Guard PIN")
+              : L("Away Guard için PIN belirle", "Set an Away Guard PIN"))
     }
 
     private var manualCoverButton: some View {
