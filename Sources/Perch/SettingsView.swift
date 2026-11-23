@@ -68,7 +68,7 @@ struct SettingsView: View {
 }
 
 /// Ayarlar penceresini yönetir.
-final class SettingsWindowController {
+final class SettingsWindowController: NSObject, NSWindowDelegate {
     private var window: NSWindow?
     private var passwordWindow: NSWindow?
     private let voice: VoiceNoteService
@@ -102,12 +102,18 @@ final class SettingsWindowController {
         let w = NSWindow(contentRect: .zero, styleMask: [.titled, .closable],
                          backing: .buffered, defer: false)
         w.isReleasedWhenClosed = false
+        w.delegate = self
         w.title = L("Away Guard şifresi", "Away Guard password")
         w.contentView = NSHostingView(rootView: AwayGuardPasswordEditor { [weak w] in w?.close() })
         w.center()
         passwordWindow = w
         NSApp.activate(ignoringOtherApps: true)
         w.makeKeyAndOrderFront(nil)
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow, window === passwordWindow else { return }
+        passwordWindow = nil
     }
 }
 

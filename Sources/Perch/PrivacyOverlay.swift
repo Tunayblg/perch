@@ -95,7 +95,10 @@ final class PrivacyOverlay {
         windows = []
         self.model = nil
         // Hemen kullanılabilir olsun: fare/klavye artık altındaki uygulamaya gider
-        old.forEach { $0.ignoresMouseEvents = true }
+        old.forEach {
+            $0.ignoresMouseEvents = true
+            $0.makeFirstResponder(nil)
+        }
         previousApp?.activate()
         previousApp = nil
         model.vanishing = true
@@ -253,7 +256,9 @@ private struct OverlayUnlockPanel: View {
         .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
         .overlay { RoundedRectangle(cornerRadius: 16).strokeBorder(.white.opacity(0.12)) }
         .environment(\.colorScheme, .dark)
-        .defaultFocus($editing, model.verifyPassword != nil)
+        .onChange(of: model.shown) { _, shown in
+            if shown && model.verifyPassword != nil { editing = true }
+        }
         .opacity(model.shown && !model.vanishing ? 1 : 0)
         .animation(.easeOut(duration: 0.25), value: model.shown)
         .animation(.easeIn(duration: 0.2), value: model.vanishing)
