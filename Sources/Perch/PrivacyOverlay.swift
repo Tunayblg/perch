@@ -6,13 +6,28 @@ final class OverlayWindow: NSWindow {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
     override func keyDown(with event: NSEvent) {}
-    override func performKeyEquivalent(with event: NSEvent) -> Bool { true }
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        guard event.modifierFlags.contains(.command) else { return false }
+        if let editor = firstResponder as? NSTextView {
+            switch event.charactersIgnoringModifiers?.lowercased() {
+            case "v": editor.paste(nil)
+            case "a": editor.selectAll(nil)
+            default: break
+            }
+        }
+        return true
+    }
 }
 
 /// Giriş/çıkış animasyonlarını sürer. Ekran kapalıyken hiçbir animasyon çalışmaz (pil dostu).
 final class OverlayModel: ObservableObject {
     @Published var shown = false
     @Published var vanishing = false
+    @Published var authenticating = false
+    @Published var authenticationFailed = false
+    var requiresManualUnlock = false
+    var verifyPassword: ((String) -> Bool)?
+    var requestSystemUnlock: (() -> Void)?
     var music: MusicService?
     var planner: PlannerService?
 }
@@ -26,7 +41,8 @@ final class PrivacyOverlay {
 
     var isShown: Bool { !windows.isEmpty }
 
-    func show(music: MusicService? = nil, planner: PlannerService? = nil) {
+    func show(music: MusicService?, planner: PlannerService?, requiresManualUnlock: Bool,
+              verifyPassword: ((String) -> Bool)?, requestSystemUnlock: @escaping () -> Void) {
         guard windows.isEmpty else { return }
         let front = NSWorkspace.shared.frontmostApplication
         previousApp = (front?.bundleIdentifier == Bundle.main.bundleIdentifier) ? nil : front
@@ -34,6 +50,9 @@ final class PrivacyOverlay {
         let model = OverlayModel()
         model.music = music
         model.planner = planner
+        model.requiresManualUnlock = requiresManualUnlock
+        model.verifyPassword = verifyPassword
+        model.requestSystemUnlock = requestSystemUnlock
         self.model = model
         for screen in NSScreen.screens {
             let w = OverlayWindow(contentRect: screen.frame, styleMask: .borderless,
@@ -50,9 +69,24 @@ final class PrivacyOverlay {
             windows.append(w)
         }
         // Klavye girdisi arkadaki uygulamaya gitmesin diye odağı biz alırız
-        NSApp.activate(ignoringOtherApps: true)
-        windows.first?.makeKey()
+        focusUnlockWindow()
         DispatchQueue.main.async { model.shown = true } // giriş animasyonu bir sonraki turda başlar
+    }
+
+    func focusUnlockWindow() {
+        guard let window = windows.first(where: { $0.frame.contains(NSEvent.mouseLocation) }) ?? windows.first
+        else { return }
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+    }
+
+    func setAuthenticating(_ active: Bool, failed: Bool = false) {
+        model?.authenticating = active
+        model?.authenticationFailed = failed
+        // The system authentication prompt must appear above the curtain.
+        let level = active ? NSWindow.Level.screenSaver.rawValue - 1 : Int(CGShieldingWindowLevel())
+        windows.forEach { $0.level = NSWindow.Level(rawValue: level) }
+        if !active { focusUnlockWindow() }
     }
 
     func hide() {
@@ -88,7 +122,16 @@ struct OverlayContent: View {
                     .opacity(model.shown ? 1 : 0)
                     .animation(.easeOut(duration: 0.3), value: model.shown)
 
-                content
+                if model.requestSystemUnlock != nil {
+                    HStack(spacing: 20) {
+                        content.frame(maxWidth: .infinity)
+                        OverlayUnlockPanel(model: model)
+                            .frame(width: min(270, geo.size.width * 0.32))
+                    }
+                    .padding(.horizontal, min(52, geo.size.width * 0.04))
+                } else {
+                    content
+                }
             }
             .frame(width: geo.size.width, height: geo.size.height)
         }
@@ -129,7 +172,9 @@ struct OverlayContent: View {
             VStack(spacing: 6) {
                 Text(L("Perch nöbette", "Perch is on watch"))
                     .font(.system(size: 17, weight: .medium))
-                Text(L("Geri döndüğünde ekran kendiliğinden açılır", "Your screen reopens the moment you're back"))
+                Text(model.requiresManualUnlock
+                     ? L("Ekranı açmak için sağdaki alanı kullan.", "Use the controls on the right to reveal the screen.")
+                     : L("Cihazın yaklaşınca ekran kendiliğinden açılır.", "Your screen reopens when your device returns."))
                     .font(.system(size: 13))
                     .foregroundStyle(.white.opacity(0.45))
             }
@@ -160,6 +205,66 @@ struct OverlayContent: View {
         .rotationEffect(.degrees(model.vanishing ? -16 : 0))
         .animation(.spring(response: 0.75, dampingFraction: 0.5), value: model.shown)
         .animation(.easeIn(duration: 0.7), value: model.vanishing)
+    }
+}
+
+private struct OverlayUnlockPanel: View {
+    @ObservedObject var model: OverlayModel
+    @State private var password = ""
+    @State private var rejected = false
+    @FocusState private var editing: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label(L("Ekranı aç", "Reveal screen"), systemImage: "lock.open")
+                .font(.system(size: 16, weight: .semibold))
+            if model.verifyPassword != nil {
+                SecureField(L("Away Guard şifresi", "Away Guard password"), text: $password)
+                    .focused($editing)
+                    .onSubmit(unlock)
+                    .onChange(of: password) { _, value in
+                        if !value.isEmpty { rejected = false }
+                    }
+                    .disabled(model.authenticating)
+                Button(L("Şifreyle aç", "Unlock with password"), action: unlock)
+                    .buttonStyle(.borderedProminent)
+                    .disabled(password.isEmpty || model.authenticating)
+                if rejected {
+                    Text(L("Şifre yanlış. Tekrar dene.", "Incorrect password. Try again."))
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+            }
+            Button {
+                model.requestSystemUnlock?()
+            } label: {
+                Label(L("Touch ID veya Mac parolası", "Touch ID or Mac password"), systemImage: "touchid")
+            }
+            .buttonStyle(.bordered)
+            .disabled(model.authenticating)
+            if model.authenticationFailed {
+                Text(L("Mac ile doğrulanamadı.", "Mac authentication did not complete."))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
+        .overlay { RoundedRectangle(cornerRadius: 16).strokeBorder(.white.opacity(0.12)) }
+        .environment(\.colorScheme, .dark)
+        .defaultFocus($editing, model.verifyPassword != nil)
+        .opacity(model.shown && !model.vanishing ? 1 : 0)
+        .animation(.easeOut(duration: 0.25), value: model.shown)
+        .animation(.easeIn(duration: 0.2), value: model.vanishing)
+    }
+
+    private func unlock() {
+        guard !password.isEmpty, !model.authenticating else { return }
+        let success = model.verifyPassword?(password) == true
+        password = ""
+        rejected = !success
+        if !success { editing = true }
     }
 }
 

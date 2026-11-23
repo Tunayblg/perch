@@ -1,5 +1,6 @@
 import AppKit
 import CoreBluetooth
+import LocalAuthentication
 
 /// Hassasiyet seviyesi. Eşik, masadayken öğrenilen "normal" sinyalin delta dB altında olur;
 /// öğrenme yoksa sabit bir yedek eşik kullanılır. Bekleme süresi de otomatik.
@@ -145,6 +146,7 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
     private var testing = false
     private var manualCover = false
     private var returnStreak = 0
+    private var authentication: LAContext?
     private let overlay = PrivacyOverlay()
 
     override init() {
@@ -206,7 +208,20 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
 
     /// Kısayolla (⌃⌥P) elle gizle / göster.
     func toggleManual() {
-        if phase == .covered { uncover() } else { cover(manual: true) }
+        if phase != .covered {
+            coverManually()
+        } else if !AppSettings.shared.hasAwayPassword {
+            uncover()
+        } else if authentication == nil {
+            overlay.focusUnlockWindow()
+        }
+    }
+
+    func coverManually() {
+        guard phase != .covered else { return }
+        testing = false
+        isTesting = false
+        cover(manual: true)
     }
 
     func cancelCountdown() {
@@ -220,6 +235,7 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
     }
 
     private func reset() {
+        cancelAuthentication()
         if overlay.isShown { music?.endProgress() }
         overlay.hide()
         phase = .present
@@ -248,13 +264,21 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
         manualCover = manual
         coveredAt = Date()
         returnStreak = 0
-        if AppSettings.shared.awayAlsoLock { ScreenLocker.lock() }
-        overlay.show(music: music, planner: planner)
+        let settings = AppSettings.shared
+        if settings.awayAlsoLock, !testing { ScreenLocker.lock() }
+        let verifyPassword: ((String) -> Bool)? = settings.hasAwayPassword ? { [weak self] password in
+            self?.unlock(with: password) == true
+        } : nil
+        overlay.show(music: music, planner: planner, requiresManualUnlock: manual,
+                     verifyPassword: verifyPassword, requestSystemUnlock: { [weak self] in
+                         self?.requestSystemUnlock()
+                     })
         music?.beginProgress()
         refreshScanning()
     }
 
     private func uncover() {
+        cancelAuthentication()
         if overlay.isShown { music?.endProgress() }
         overlay.hide()
         phase = .present
@@ -265,6 +289,44 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
         awayFor = 0
         returnStreak = 0
         snoozeUntil = Date().addingTimeInterval(20) // dönüşte hemen tekrar örtülmesin
+        refreshScanning()
+    }
+
+    @discardableResult
+    func unlock(with password: String) -> Bool {
+        guard phase == .covered, AppSettings.shared.verifiesAwayPassword(password) else { return false }
+        uncover()
+        return true
+    }
+
+    private func requestSystemUnlock() {
+        guard phase == .covered, authentication == nil else { return }
+        let context = LAContext()
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: nil) else {
+            overlay.setAuthenticating(false, failed: true)
+            return
+        }
+        authentication = context
+        overlay.setAuthenticating(true)
+        context.evaluatePolicy(.deviceOwnerAuthentication,
+                               localizedReason: L("Perch’ün gizlilik ekranını aç", "Reveal the screen behind Perch")) { [weak self] success, error in
+            let cancelled = (error as? LAError)?.code == .userCancel
+            DispatchQueue.main.async {
+                guard let self, self.authentication === context else { return }
+                self.authentication = nil
+                if success {
+                    self.uncover()
+                } else {
+                    self.overlay.setAuthenticating(false, failed: !cancelled)
+                }
+            }
+        }
+    }
+
+    private func cancelAuthentication() {
+        let context = authentication
+        authentication = nil
+        context?.invalidate()
     }
 
     // MARK: - Tarama (enerji dostu)
