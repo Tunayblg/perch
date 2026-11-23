@@ -27,6 +27,7 @@ final class OverlayModel: ObservableObject {
     @Published var authenticationFailed = false
     var requiresManualUnlock = false
     var verifyPassword: ((String) -> Bool)?
+    var touchIDAvailable = false
     var requestSystemUnlock: (() -> Void)?
     var music: MusicService?
     var planner: PlannerService?
@@ -42,7 +43,8 @@ final class PrivacyOverlay {
     var isShown: Bool { !windows.isEmpty }
 
     func show(music: MusicService?, planner: PlannerService?, requiresManualUnlock: Bool,
-              verifyPassword: ((String) -> Bool)?, requestSystemUnlock: @escaping () -> Void) {
+              verifyPassword: ((String) -> Bool)?, touchIDAvailable: Bool,
+              requestSystemUnlock: @escaping () -> Void) {
         guard windows.isEmpty else { return }
         let front = NSWorkspace.shared.frontmostApplication
         previousApp = (front?.bundleIdentifier == Bundle.main.bundleIdentifier) ? nil : front
@@ -52,6 +54,7 @@ final class PrivacyOverlay {
         model.planner = planner
         model.requiresManualUnlock = requiresManualUnlock
         model.verifyPassword = verifyPassword
+        model.touchIDAvailable = touchIDAvailable
         model.requestSystemUnlock = requestSystemUnlock
         self.model = model
         for screen in NSScreen.screens {
@@ -84,12 +87,12 @@ final class PrivacyOverlay {
         model?.authenticating = active
         model?.authenticationFailed = failed
         // The system authentication prompt must appear above the curtain.
-        let level = active ? NSWindow.Level.screenSaver.rawValue - 1 : Int(CGShieldingWindowLevel())
-        windows.forEach { $0.level = NSWindow.Level(rawValue: level) }
+        let level: NSWindow.Level = active ? .popUpMenu : .init(rawValue: Int(CGShieldingWindowLevel()))
+        windows.forEach { $0.level = level }
         if !active { focusUnlockWindow() }
     }
 
-    func hide() {
+    func hide(immediately: Bool = false) {
         guard !windows.isEmpty, let model else { return }
         let old = windows
         windows = []
@@ -101,8 +104,12 @@ final class PrivacyOverlay {
         }
         previousApp?.activate()
         previousApp = nil
-        model.vanishing = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { old.forEach { $0.orderOut(nil) } }
+        if immediately {
+            old.forEach { $0.orderOut(nil) }
+        } else {
+            model.vanishing = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { old.forEach { $0.orderOut(nil) } }
+        }
     }
 }
 
@@ -241,7 +248,9 @@ private struct OverlayUnlockPanel: View {
             Button {
                 model.requestSystemUnlock?()
             } label: {
-                Label(L("Touch ID veya Mac parolası", "Touch ID or Mac password"), systemImage: "touchid")
+                Label(model.touchIDAvailable ? L("Touch ID ile aç", "Unlock with Touch ID")
+                      : L("Mac ile doğrula", "Authenticate with your Mac"),
+                      systemImage: model.touchIDAvailable ? "touchid" : "lock")
             }
             .buttonStyle(.bordered)
             .disabled(model.authenticating)

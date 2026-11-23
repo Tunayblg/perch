@@ -273,18 +273,20 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
         let verifyPassword: ((String) -> Bool)? = settings.hasAwayPassword ? { [weak self] password in
             self?.unlock(with: password) == true
         } : nil
+        let touchIDAvailable = canUseTouchID(LAContext())
         overlay.show(music: music, planner: planner, requiresManualUnlock: manual,
-                     verifyPassword: verifyPassword, requestSystemUnlock: { [weak self] in
-                         self?.requestSystemUnlock()
+                     verifyPassword: verifyPassword, touchIDAvailable: touchIDAvailable,
+                     requestSystemUnlock: { [weak self] in
+                         self?.requestSystemUnlock(preferTouchID: touchIDAvailable)
                      })
         music?.beginProgress()
         refreshScanning()
     }
 
-    private func uncover(recovered: Bool = false) {
+    private func uncover(recovered: Bool = false, immediately: Bool = false) {
         cancelAuthentication()
         if overlay.isShown { music?.endProgress() }
-        overlay.hide()
+        overlay.hide(immediately: immediately)
         phase = .present
         manualCover = false
         testing = false
@@ -306,25 +308,36 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
         return true
     }
 
-    private func requestSystemUnlock() {
+    private func canUseTouchID(_ context: LAContext) -> Bool {
+        context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
+            && context.biometryType == .touchID
+    }
+
+    private func requestSystemUnlock(preferTouchID: Bool) {
         guard phase == .covered, authentication == nil else { return }
         let context = LAContext()
-        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: nil) else {
+        let useTouchID = preferTouchID && canUseTouchID(context)
+        let policy: LAPolicy = useTouchID ? .deviceOwnerAuthenticationWithBiometrics : .deviceOwnerAuthentication
+        guard context.canEvaluatePolicy(policy, error: nil) else {
             overlay.setAuthenticating(false, failed: true)
             return
         }
+        if useTouchID { context.localizedFallbackTitle = L("Mac parolasını kullan", "Use Mac password") }
         authentication = context
         overlay.setAuthenticating(true)
-        context.evaluatePolicy(.deviceOwnerAuthentication,
+        context.evaluatePolicy(policy,
                                localizedReason: L("Perch’ün gizlilik ekranını aç", "Reveal the screen behind Perch")) { [weak self] success, error in
-            let cancelled = (error as? LAError)?.code == .userCancel
+            let failure = (error as? LAError)?.code
             DispatchQueue.main.async {
                 guard let self, self.authentication === context else { return }
                 self.authentication = nil
                 if success {
-                    self.uncover(recovered: true)
+                    self.uncover(recovered: true, immediately: true)
+                } else if useTouchID, failure == .userFallback || failure == .biometryLockout
+                            || failure == .biometryNotAvailable || failure == .biometryNotEnrolled {
+                    self.requestSystemUnlock(preferTouchID: false)
                 } else {
-                    self.overlay.setAuthenticating(false, failed: !cancelled)
+                    self.overlay.setAuthenticating(false, failed: failure != .userCancel)
                 }
             }
         }
