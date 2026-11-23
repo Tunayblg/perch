@@ -223,12 +223,12 @@ struct MusicPanel: View {
     }
 
     private var placeholder: some View {
-        ZStack {
-            Color.white.opacity(0.08)
-            Image(systemName: "music.note")
-                .font(.system(size: 28))
-                .foregroundStyle(.white.opacity(0.4))
-        }
+        Image(systemName: "music.note")
+            .font(.system(size: 28))
+            .foregroundStyle(.white.opacity(0.4))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .notchSurface(in: RoundedRectangle(cornerRadius: 12), classic: .white.opacity(0.08),
+                          glass: .white.opacity(0.06))
     }
 
     private var progress: some View {
@@ -254,7 +254,7 @@ struct MusicPanel: View {
         HStack(spacing: 30) {
             Spacer()
             button("backward.fill", 20) { music.previous() }
-            button(music.isPlaying ? "pause.fill" : "play.fill", 30) { music.togglePlayPause() }
+            button(music.isPlaying ? "pause.fill" : "play.fill", 30, primary: true) { music.togglePlayPause() }
             button("forward.fill", 20) { music.next() }
             Spacer()
         }
@@ -262,12 +262,15 @@ struct MusicPanel: View {
         .opacity(music.hasTrack ? 1 : 0.35)
     }
 
-    private func button(_ symbol: String, _ size: CGFloat, action: @escaping () -> Void) -> some View {
+    private func button(_ symbol: String, _ size: CGFloat, primary: Bool = false,
+                        action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
                 .font(.system(size: size))
                 .foregroundStyle(.white)
                 .frame(width: 34, height: 34)
+                .notchSurface(in: Circle(), classic: .clear, glass: primary ? .white.opacity(0.09) : .clear,
+                              highlighted: primary)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
