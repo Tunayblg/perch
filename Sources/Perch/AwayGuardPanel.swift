@@ -20,7 +20,7 @@ struct AwayGuardPanel: View {
     // MARK: - Sol: aç/kapa, cihaz, durum, test
 
     private var leftColumn: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
                 Text("Away Guard")
                     .font(.system(size: 12, weight: .semibold))
@@ -31,38 +31,41 @@ struct AwayGuardPanel: View {
                     .padding(.horizontal, 4)
                     .padding(.vertical, 1)
                     .background(Color.orange, in: Capsule())
-                Spacer(minLength: 0)
-                Button {
-                    NotificationCenter.default.post(name: .openAwayGuardPassword, object: nil)
-                } label: {
-                    Label(L("Şifre", "Password"), systemImage: "key.fill")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.8))
-                        .padding(.horizontal, 7)
-                        .frame(height: 20)
-                        .notchSurface(in: Capsule(), classic: .white.opacity(0.10), glass: .white.opacity(0.07))
-                }
-                .buttonStyle(.plain)
-                .help(settings.hasAwayPassword
-                      ? L("Away Guard şifresini değiştir", "Change the Away Guard password")
-                      : L("Away Guard şifresi belirle", "Set an Away Guard password"))
             }
 
             deviceRow
 
             mainButton
 
-            HStack(spacing: 6) {
-                manualCoverButton
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    manualCoverButton
+                    passwordButton
+                }
                 Text(statusText)
                     .font(.system(size: 10))
                     .foregroundStyle(statusColor)
-                    .lineLimit(2)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .lineLimit(1)
                     .help(statusText)
             }
-            .frame(height: 26)
         }
+    }
+
+    private var passwordButton: some View {
+        Button {
+            NotificationCenter.default.post(name: .openAwayGuardPassword, object: nil)
+        } label: {
+            Label(L("Şifre", "Password"), systemImage: "key.fill")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.85))
+                .padding(.horizontal, 7)
+                .frame(height: 22)
+                .notchSurface(in: Capsule(), classic: .white.opacity(0.10), glass: .white.opacity(0.07))
+        }
+        .buttonStyle(.plain)
+        .help(settings.hasAwayPassword
+              ? L("Away Guard şifresini değiştir", "Change the Away Guard password")
+              : L("Away Guard şifresi belirle", "Set an Away Guard password"))
     }
 
     private var manualCoverButton: some View {
