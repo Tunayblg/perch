@@ -49,11 +49,13 @@ struct TodoPanel: View {
                 .foregroundStyle(.white.opacity(0.6))
                 .padding(.horizontal, 7)
                 .padding(.vertical, 2)
-                .background(Color.white.opacity(0.12), in: Capsule())
+                .notchSurface(in: Capsule(), classic: .white.opacity(0.12), glass: .white.opacity(0.08),
+                              highlighted: false)
         }
         .padding(.horizontal, 10)
         .frame(height: 30)
-        .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+        .notchSurface(in: RoundedRectangle(cornerRadius: 9), classic: .white.opacity(0.08),
+                      glass: .black.opacity(0.13))
     }
 
     private func row(_ item: TodoItem) -> some View {
