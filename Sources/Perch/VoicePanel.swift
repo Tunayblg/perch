@@ -25,14 +25,14 @@ struct VoicePanel: View {
     private var recordColumn: some View {
         VStack(spacing: 6) {
             Button(action: voice.toggle) {
-                ZStack {
-                    Circle()
-                        .fill(voice.isRecording ? Color.red : Color.white.opacity(0.14))
-                        .frame(width: 58, height: 58)
-                    Image(systemName: voice.isRecording ? "stop.fill" : "mic.fill")
-                        .font(.system(size: 22))
-                        .foregroundStyle(.white)
-                }
+                Image(systemName: voice.isRecording ? "stop.fill" : "mic.fill")
+                    .font(.system(size: 22))
+                    .foregroundStyle(.white)
+                    .frame(width: 58, height: 58)
+                    .notchSurface(in: Circle(),
+                                  classic: voice.isRecording ? .red : .white.opacity(0.14),
+                                  glass: voice.isRecording ? .red : .white.opacity(0.10))
+                    .contentShape(Circle())
             }
             .buttonStyle(.plain)
 
@@ -100,7 +100,8 @@ struct VoicePanel: View {
         }
         .padding(.horizontal, 8)
         .frame(height: 26)
-        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+        .notchSurface(in: RoundedRectangle(cornerRadius: 7), classic: .white.opacity(0.06),
+                      glass: .white.opacity(0.06), highlighted: false)
     }
 
     private func iconButton(_ symbol: String, help: String, action: @escaping () -> Void) -> some View {
