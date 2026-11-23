@@ -70,7 +70,8 @@ struct AwayGuardPanel: View {
             .font(.system(size: 13, weight: .semibold))
             .foregroundStyle(foreground)
             .frame(maxWidth: .infinity, minHeight: 32)
-            .background(background, in: Capsule())
+            .notchSurface(in: Capsule(), classic: background,
+                          glass: counting || away.enabled ? background : .white.opacity(0.07))
             .animation(.smooth(duration: 0.25), value: away.enabled)
         }
         .buttonStyle(.plain)
@@ -87,7 +88,8 @@ struct AwayGuardPanel: View {
                     .foregroundStyle(away.previewing ? Color.black : .white.opacity(0.85))
                     .padding(.horizontal, 10)
                     .frame(height: 20)
-                    .background(away.previewing ? accent : Color.white.opacity(0.12), in: Capsule())
+                    .notchSurface(in: Capsule(), classic: away.previewing ? accent : .white.opacity(0.12),
+                                  glass: away.previewing ? accent : .white.opacity(0.07))
             }
             .buttonStyle(.plain)
             .help(L("Koruma kapalıyken sinyali canlı izle", "Watch the live signal while the guard is off"))
@@ -105,7 +107,7 @@ struct AwayGuardPanel: View {
                 .foregroundStyle(.white.opacity(0.85))
                 .padding(.horizontal, 10)
                 .frame(height: 20)
-                .background(Color.white.opacity(0.12), in: Capsule())
+                .notchSurface(in: Capsule(), classic: .white.opacity(0.12), glass: .white.opacity(0.07))
         }
         .buttonStyle(.plain)
         .disabled(away.phase != .present)
@@ -126,7 +128,8 @@ struct AwayGuardPanel: View {
         }
         .padding(.horizontal, 3)
         .frame(height: 26)
-        .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .notchSurface(in: RoundedRectangle(cornerRadius: 8), classic: .white.opacity(0.08),
+                      glass: .black.opacity(0.12))
     }
 
     private func chevron(_ symbol: String, action: @escaping () -> Void) -> some View {
