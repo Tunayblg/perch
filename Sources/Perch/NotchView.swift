@@ -62,7 +62,7 @@ struct NotchView: View {
                         case .stats: StatsPanel(stats: stats)
                         case .clipboard: ClipboardPanel(clipboard: clipboard)
                         case .awayGuard: AwayGuardPanel(away: awayGuard)
-                        case .settings: SettingsPanel()
+                        case .settings: SettingsPanel(compact: size.width < 490)
                         }
                     }
                     .id(effectiveTab)

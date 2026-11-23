@@ -2,6 +2,8 @@ import SwiftUI
 
 /// Paneldeki Ayarlar sekmesi: sekmeleri, temayı, vurgu rengini ve dili düzenler.
 struct SettingsPanel: View {
+    let compact: Bool
+
     @ObservedObject var settings = AppSettings.shared
     @State private var selected: NotchTab = .music
     @Environment(\.accent) private var accent
@@ -25,13 +27,13 @@ struct SettingsPanel: View {
         VStack(alignment: .leading, spacing: 8) {
             sectionTitle(L("Sekmeler", "Tabs"))
 
-            HStack(spacing: 4) {
+            HStack(spacing: compact ? 2 : 4) {
                 ForEach(settings.tabOrder) { tab in
                     Button { selected = tab } label: {
                         Image(systemName: tab.symbol)
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(.white.opacity(settings.isVisible(tab) ? 0.95 : 0.3))
-                            .frame(width: 25, height: 25)
+                            .frame(width: compact ? 18 : 25, height: 25)
                             .background(selected == tab ? Color.white.opacity(0.16) : .clear, in: RoundedRectangle(cornerRadius: 7))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 7)
@@ -85,12 +87,12 @@ struct SettingsPanel: View {
     private var appearanceColumn: some View {
         VStack(alignment: .leading, spacing: 8) {
             sectionTitle(L("Vurgu rengi", "Accent color"))
-            HStack(spacing: 7) {
+            HStack(spacing: compact ? 5 : 7) {
                 ForEach(AccentChoice.allCases) { choice in
                     Button { settings.accent = choice } label: {
                         Circle()
                             .fill(choice.color)
-                            .frame(width: 20, height: 20)
+                            .frame(width: compact ? 18 : 20, height: 20)
                             .overlay(
                                 Circle().strokeBorder(.white, lineWidth: settings.accent == choice ? 2 : 0)
                                     .padding(-3)
