@@ -29,10 +29,9 @@ struct ShelfPanel: View {
                 .foregroundStyle(.white.opacity(airDropTargeted ? 1 : 0.7))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.white.opacity(airDropTargeted ? 0.22 : 0.1))
-        )
+        .notchSurface(in: RoundedRectangle(cornerRadius: 14),
+                      classic: .white.opacity(airDropTargeted ? 0.22 : 0.1),
+                      glass: .white.opacity(airDropTargeted ? 0.20 : 0.07))
         .onDrop(of: [.fileURL], isTargeted: $airDropTargeted) { providers in
             Self.loadURLs(from: providers) { urls in Self.sendViaAirDrop(urls) }
             return true
@@ -74,10 +73,10 @@ struct ShelfPanel: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(targeted ? Color.white.opacity(0.12) : .clear)
-        )
+        .notchSurface(in: RoundedRectangle(cornerRadius: 14),
+                      classic: targeted ? .white.opacity(0.12) : .clear,
+                      glass: targeted ? .white.opacity(0.12) : .black.opacity(0.09),
+                      highlighted: !store.items.isEmpty && !targeted)
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .strokeBorder(Color.white.opacity(targeted ? 0.6 : 0), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
