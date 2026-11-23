@@ -4,6 +4,7 @@ import SwiftUI
 struct StatsPanel: View {
     @ObservedObject var stats: StatsService
     @Environment(\.accent) private var accent
+    @Environment(\.notchAppearance) private var appearance
 
     var body: some View {
         HStack(spacing: 18) {
@@ -21,7 +22,10 @@ struct StatsPanel: View {
                     label("internaldrive", L("\(Int(Double(stats.diskFree) / 1e9)) GB boş", "\(Int(Double(stats.diskFree) / 1e9)) GB free"))
                 }
             }
+            .padding(appearance == .liquidGlass ? 8 : 0)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .notchSurface(in: RoundedRectangle(cornerRadius: 10), classic: .clear,
+                          glass: .black.opacity(0.10))
         }
         .onAppear { stats.start() }
         .onDisappear { stats.stop() }
