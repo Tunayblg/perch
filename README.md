@@ -41,9 +41,9 @@ Working in a café, an open office or a shared flat? Walk away from your Mac and
 - **Opens instantly.** The moment your device is back in range the screen is yours again. No waiting, no clicking.
 - **Easy on the battery.** Scanning is duty-cycled in the background and fully off when the guard is off. In my measurements on an Apple-silicon MacBook Air it costs about **0.5% CPU** with protection on, and the privacy-screen animation only runs for about a second while it appears or disappears.
 - **Private by design.** Passive Bluetooth signal-strength reading only: no camera, no microphone, no accounts, nothing leaves your Mac.
-- **You stay in control.** `⌃⌥P` hides or reveals the screen by hand (and is the emergency exit, even if your Watch's battery died). An optional real screen lock can be enabled in Settings.
+- **You stay in control.** Set or change a password under **Away Guard → Password**. If your Watch or phone dies or Bluetooth is off, enter that password on the right of the privacy screen. Touch ID or your Mac password also works. To hide the screen without a device, click **Hide now** or press `⌃⌥P`.
 
-> **Honest limits (it's a beta).** The privacy screen is a cover, not a lock, so anyone with physical access and the shortcut can dismiss it. Bluetooth signal strength is approximate: walls, pockets and body position change it. If your phone stays on the desk the Mac thinks you're nearby. Works with Apple devices your Mac already recognises.
+> **Honest limits (it's a beta).** The privacy screen is a cover. To use the macOS screen lock as well, enable the separate option in Settings and use your Mac password or Touch ID. Bluetooth signal strength is approximate: walls, pockets and body position change it. If your phone stays on the desk the Mac thinks you're nearby. Automatic detection works with Apple devices your Mac already recognises.
 
 ---
 
@@ -115,7 +115,7 @@ open build/Perch.app
 | Shortcut | Action |
 |---|---|
 | `⌃⌥N` | Start / stop a voice note |
-| `⌃⌥P` | Hide / reveal the screen (privacy screen, also Away Guard's emergency exit) |
+| `⌃⌥P` | Show the privacy screen. When covered, focus the unlock panel if you set an Away Guard password, or reveal the screen directly if you haven't. |
 | Two-finger swipe over the notch | Switch tabs |
 
 ## Permissions
@@ -158,14 +158,14 @@ Pure Swift, **zero third-party dependencies**. A few things that might be intere
 ## Known limitations
 
 - Music is read from Spotify and Apple Music only (no browser / YouTube yet). Apple Music artwork is not shown yet.
-- Away Guard is a beta and a privacy *cover*, not a lock. Dismissing it needs the device to return or `⌃⌥P`; a Touch ID / password option is planned.
+- After you reveal the screen with the Away Guard password or Mac authentication, automatic covering waits for a fresh nearby signal from your device.
 - Voice notes add **text** to Notes; Notes' scripting interface does not accept audio attachments.
 - The file shelf stores file *paths*; it does not copy files.
 - Not notarized, so the first launch needs the *Open Anyway* step.
 
 ## Roadmap
 
-Touch ID / password to dismiss the privacy screen · Away Guard with motion detection (MacBook moved) · Alarm clock · Lower the music volume during Pomodoro breaks · Calendar (time to next meeting, one-click join) · Reminders · Habit streaks · Browser media support · Apple Music artwork · Quick "ask an AI" box
+Away Guard with motion detection (MacBook moved) · Alarm clock · Lower the music volume during Pomodoro breaks · Calendar (time to next meeting, one-click join) · Reminders · Habit streaks · Browser media support · Apple Music artwork · Quick "ask an AI" box
 
 Details in [docs/PLAN.md](docs/PLAN.md) (Turkish) and the Away Guard research notes in [docs/AWAY_GUARD_RESEARCH.md](docs/AWAY_GUARD_RESEARCH.md).
 

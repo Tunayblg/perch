@@ -41,9 +41,9 @@ Kafede, açık ofiste ya da ortak evde mi çalışıyorsun? Mac'inin başından 
 - **Anında açılıyor.** Cihazın menzile girdiği an ekran yine senin. Bekleme yok, tıklama yok.
 - **Pil dostu.** Arka planda tarama kısa aralıklarla yapılır, koruma kapalıyken hiç yapılmaz. Apple Silicon bir MacBook Air'de yaptığım ölçümlerde koruma açıkken yaklaşık **%0,5 CPU** harcıyor, gizlilik ekranı animasyonu da sadece belirirken ve kaybolurken yaklaşık bir saniye çalışıyor.
 - **Tasarımdan gizli.** Yalnızca Bluetooth sinyal gücü okunur: kamera yok, mikrofon yok, hesap yok, Mac'inden hiçbir şey çıkmaz.
-- **Kontrol sende.** `⌃⌥P` ekranı elle gizler ya da açar (Watch'unun şarjı bitse bile acil çıkış budur). İstersen Ayarlar'dan gerçek ekran kilidini de açabilirsin.
+- **Kontrol sende.** **Away Guard → Şifre** ile şifreni belirle veya değiştir. Watch ya da telefonun şarjı biterse veya Bluetooth kapanırsa gizlilik ekranının sağındaki alana bu şifreyi gir. Touch ID veya Mac parolası da kullanılabilir. Cihaz seçmeden ekranı gizlemek için **Elle gizle** düğmesine veya `⌃⌥P` kısayoluna bas.
 
-> **Dürüst sınırlar (bu bir beta).** Gizlilik ekranı bir örtüdür, kilit değildir; fiziksel erişimi olan ve kısayolu bilen biri kaldırabilir. Bluetooth sinyal gücü yaklaşıktır: duvarlar, cepler ve vücut konumu etkiler. Telefonun masada kalırsa Mac seni yakında sanar. Mac'inin zaten tanıdığı Apple cihazlarıyla çalışır.
+> **Dürüst sınırlar (bu bir beta).** Gizlilik ekranı bir örtüdür. macOS ekran kilidini de kullanmak için Ayarlar’daki ayrı seçeneği etkinleştir ve Mac parolanı veya Touch ID’yi kullan. Bluetooth sinyal gücü yaklaşıktır: duvarlar, cepler ve vücut konumu etkiler. Telefonun masada kalırsa Mac seni yakında sanar. Otomatik algılama Mac'inin tanıdığı Apple cihazlarıyla çalışır.
 
 ---
 
@@ -115,7 +115,7 @@ open build/Perch.app
 | Kısayol | Ne yapar |
 |---|---|
 | `⌃⌥N` | Sesli notu başlat / durdur |
-| `⌃⌥P` | Ekranı gizle / göster (gizlilik ekranı, aynı zamanda Away Guard'ın acil çıkışı) |
+| `⌃⌥P` | Gizlilik ekranını aç. Örtü açıksa, şifre belirlediysen açma alanını öne getirir. Şifre belirlemediysen örtüyü kaldırır. |
 | Çentiğin üstünde iki parmakla kaydır | Sekme değiştir |
 
 ## İzinler
@@ -158,14 +158,14 @@ Saf Swift, **sıfır üçüncü taraf bağımlılık**. Okumaya değer birkaç n
 ## Bilinen sınırlar
 
 - Müzik yalnızca Spotify ve Apple Music'ten okunur (tarayıcı / YouTube henüz yok). Apple Music kapağı henüz gösterilmiyor.
-- Away Guard bir beta ve bir gizlilik *örtüsü*, kilit değil. Kaldırmak için cihazın dönmesi ya da `⌃⌥P` gerekir; Touch ID / parola seçeneği planlanıyor.
+- Örtüyü Away Guard şifresiyle veya Mac kimlik doğrulamasıyla kaldırdığında otomatik gizleme, cihazından yeni bir yakınlık sinyali gelene kadar bekler.
 - Sesli not Notlar'a **metin** ekler; Notlar'ın betik arayüzü ses eki kabul etmez.
 - Raf dosyaların *yolunu* tutar, dosyaları kopyalamaz.
 - Noter onaylı değil, ilk açılışta *Yine de Aç* adımı gerekir.
 
 ## Yol haritası
 
-Gizlilik ekranını Touch ID / parolayla kaldırma · Away Guard'a hareket algısı (MacBook taşındı mı) · Saatli alarm · Pomodoro molasında müziği kısma · Takvim (sıradaki toplantıya kalan süre, tek tıkla katıl) · Hatırlatıcılar · Alışkanlık takibi · Tarayıcı müzikleri · Apple Music kapağı · Hızlı "yapay zekâya sor" kutusu
+Away Guard'a hareket algısı (MacBook taşındı mı) · Saatli alarm · Pomodoro molasında müziği kısma · Takvim (sıradaki toplantıya kalan süre, tek tıkla katıl) · Hatırlatıcılar · Alışkanlık takibi · Tarayıcı müzikleri · Apple Music kapağı · Hızlı "yapay zekâya sor" kutusu
 
 Ayrıntı: [docs/PLAN.md](docs/PLAN.md) ve Away Guard araştırma notları: [docs/AWAY_GUARD_RESEARCH.md](docs/AWAY_GUARD_RESEARCH.md).
 
