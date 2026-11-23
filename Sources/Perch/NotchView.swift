@@ -37,12 +37,17 @@ struct NotchView: View {
     @ObservedObject var clipboard: ClipboardService
     @ObservedObject var awayGuard: AwayGuardService
     @ObservedObject var settings = AppSettings.shared
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     var body: some View {
         let size = state.expanded ? state.expandedSize : state.collapsedSize
         ZStack(alignment: .top) {
-            NotchShape(bottomRadius: state.expanded ? 26 : 10)
-                .fill(Color.black)
+            NotchBackground(
+                expanded: state.expanded,
+                glass: settings.appearance == .liquidGlass,
+                reduceTransparency: reduceTransparency
+            )
+            .allowsHitTesting(false)
 
             if state.expanded {
                 VStack(spacing: 0) {
@@ -94,6 +99,7 @@ struct NotchView: View {
         .animation(.smooth(duration: 0.36), value: state.showsBadge)
         .animation(.smooth(duration: 0.36), value: size.width)
         .environment(\.accent, settings.effectiveAccent.color)
+        .environment(\.notchAppearance, settings.appearance)
         .id(settings.language) // dil değişince tüm arayüz yeniden kurulur
     }
 
@@ -122,7 +128,9 @@ struct NotchView: View {
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(active ? settings.effectiveAccent.color : .white.opacity(0.4))
                 .frame(width: 26, height: 24)
-                .background(active ? Color.white.opacity(0.14) : .clear, in: Capsule())
+                .notchSurface(in: Capsule(), classic: active ? .white.opacity(0.14) : .clear,
+                              glass: active ? .white.opacity(0.12) : .clear,
+                              highlighted: active)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Paneldeki Ayarlar sekmesi: sekmeleri gizle/sırala, vurgu rengi, dil.
+/// Paneldeki Ayarlar sekmesi: sekmeleri, temayı, vurgu rengini ve dili düzenler.
 struct SettingsPanel: View {
     @ObservedObject var settings = AppSettings.shared
     @State private var selected: NotchTab = .music
@@ -8,8 +8,11 @@ struct SettingsPanel: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
-            tabsColumn
-                .frame(maxWidth: .infinity, alignment: .leading)
+            VStack(alignment: .leading, spacing: 6) {
+                tabsColumn
+                appearancePicker
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
             Rectangle().fill(Color.white.opacity(0.12)).frame(width: 1)
             appearanceColumn
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -58,6 +61,26 @@ struct SettingsPanel: View {
     }
 
     // MARK: - Görünüm
+
+    private var appearancePicker: some View {
+        HStack(spacing: 5) {
+            sectionTitle(L("Tema", "Theme"))
+            ForEach(NotchAppearance.allCases) { appearance in
+                let selected = settings.appearance == appearance
+                Button { settings.appearance = appearance } label: {
+                    Text(appearance.title)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(selected ? .black : .white.opacity(0.85))
+                        .padding(.horizontal, 8)
+                        .frame(height: 22)
+                        .notchSurface(in: Capsule(), classic: selected ? accent : .white.opacity(0.1),
+                                      glass: selected ? accent : .white.opacity(0.07))
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(selected ? .isSelected : [])
+            }
+        }
+    }
 
     private var appearanceColumn: some View {
         VStack(alignment: .leading, spacing: 8) {

@@ -8,6 +8,11 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section {
+                Picker(L("Çentik teması", "Notch theme"), selection: $settings.appearance) {
+                    ForEach(NotchAppearance.allCases) { appearance in
+                        Text(appearance.title).tag(appearance)
+                    }
+                }
                 Picker(L("Dil", "Language"), selection: $settings.language) {
                     Text(L("Sistem", "System")).tag(AppLanguage.system)
                     Text("Türkçe").tag(AppLanguage.tr)

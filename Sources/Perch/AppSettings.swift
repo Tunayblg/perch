@@ -6,6 +6,19 @@ enum AppLanguage: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+enum NotchAppearance: String, CaseIterable, Identifiable {
+    case classic, liquidGlass
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .classic: return L("Klasik", "Classic")
+        case .liquidGlass: return "Liquid Glass"
+        }
+    }
+}
+
 /// Kullanıcı ayarları (UserDefaults'ta saklanır).
 final class AppSettings: ObservableObject {
     static let shared = AppSettings()
@@ -26,6 +39,9 @@ final class AppSettings: ObservableObject {
     @Published var accent: AccentChoice {
         didSet { UserDefaults.standard.set(accent.rawValue, forKey: "accent") }
     }
+    @Published var appearance: NotchAppearance {
+        didSet { UserDefaults.standard.set(appearance.rawValue, forKey: "notchAppearance") }
+    }
     @Published private(set) var tabOrder: [NotchTab] {
         didSet { UserDefaults.standard.set(tabOrder.map(\.rawValue), forKey: "tabOrder") }
     }
@@ -43,6 +59,7 @@ final class AppSettings: ObservableObject {
         workMinutes = work > 0 ? work : 25
         restMinutes = rest > 0 ? rest : 5
         accent = AccentChoice(rawValue: d.string(forKey: "accent") ?? "") ?? .white
+        appearance = NotchAppearance(rawValue: d.string(forKey: "notchAppearance") ?? "") ?? .classic
         awayAlsoLock = d.bool(forKey: "awayAlsoLock")
 
         // Kayıtlı sıra + sonradan eklenen yeni sekmeler
