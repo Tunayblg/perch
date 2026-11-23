@@ -20,6 +20,10 @@ final class OverlayWindow: NSWindow {
 }
 
 /// Giriş/çıkış animasyonlarını sürer. Ekran kapalıyken hiçbir animasyon çalışmaz (pil dostu).
+enum OverlayUnlockAction {
+    case reveal, setUpPIN
+}
+
 final class OverlayModel: ObservableObject {
     @Published var shown = false
     @Published var vanishing = false
@@ -29,7 +33,7 @@ final class OverlayModel: ObservableObject {
     var verifyPassword: ((String) -> Bool)?
     var usesPIN = false
     var touchIDAvailable = false
-    var requestSystemUnlock: (() -> Void)?
+    var requestSystemUnlock: ((OverlayUnlockAction) -> Void)?
     var music: MusicService?
     var planner: PlannerService?
 }
@@ -45,7 +49,7 @@ final class PrivacyOverlay {
 
     func show(music: MusicService?, planner: PlannerService?, requiresManualUnlock: Bool,
               verifyPassword: ((String) -> Bool)?, usesPIN: Bool, touchIDAvailable: Bool,
-              requestSystemUnlock: @escaping () -> Void) {
+              requestSystemUnlock: @escaping (OverlayUnlockAction) -> Void) {
         guard windows.isEmpty else { return }
         let front = NSWorkspace.shared.frontmostApplication
         previousApp = (front?.bundleIdentifier == Bundle.main.bundleIdentifier) ? nil : front
@@ -273,9 +277,20 @@ private struct OverlayUnlockPanel: View {
                         .font(.caption)
                         .foregroundStyle(.red)
                 }
+            } else {
+                Text(L("PIN henüz ayarlanmadı.", "No PIN has been set."))
+                    .font(.system(size: 11))
+                    .foregroundStyle(.white.opacity(0.65))
+                Button {
+                    model.requestSystemUnlock?(.setUpPIN)
+                } label: {
+                    Label(L("PIN ayarla", "Set up PIN"), systemImage: "key")
+                }
+                .buttonStyle(.bordered)
+                .disabled(model.authenticating)
             }
             Button {
-                model.requestSystemUnlock?()
+                model.requestSystemUnlock?(.reveal)
             } label: {
                 Label(model.touchIDAvailable ? L("Touch ID ile aç", "Unlock with Touch ID")
                       : L("Mac ile doğrula", "Authenticate with your Mac"),

@@ -55,7 +55,7 @@ struct AwayGuardPanel: View {
         Button {
             NotificationCenter.default.post(name: .openAwayGuardPassword, object: nil)
         } label: {
-            Label("PIN", systemImage: "key.fill")
+            Label(settings.awayUsesPIN ? "PIN" : L("PIN ayarla", "Set up PIN"), systemImage: "key.fill")
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.85))
                 .padding(.horizontal, 7)

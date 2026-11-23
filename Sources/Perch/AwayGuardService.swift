@@ -277,8 +277,8 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
         overlay.show(music: music, planner: planner, requiresManualUnlock: manual,
                      verifyPassword: verifyPassword, usesPIN: settings.awayUsesPIN,
                      touchIDAvailable: touchIDAvailable,
-                     requestSystemUnlock: { [weak self] in
-                         self?.requestSystemUnlock(preferTouchID: touchIDAvailable)
+                     requestSystemUnlock: { [weak self] action in
+                         self?.requestSystemUnlock(preferTouchID: touchIDAvailable, action: action)
                      })
         music?.beginProgress()
         refreshScanning()
@@ -314,7 +314,7 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
             && context.biometryType == .touchID
     }
 
-    private func requestSystemUnlock(preferTouchID: Bool) {
+    private func requestSystemUnlock(preferTouchID: Bool, action: OverlayUnlockAction) {
         guard phase == .covered, authentication == nil else { return }
         let context = LAContext()
         let useTouchID = preferTouchID && canUseTouchID(context)
@@ -326,17 +326,26 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
         if useTouchID { context.localizedFallbackTitle = L("Mac parolasını kullan", "Use Mac password") }
         authentication = context
         overlay.setAuthenticating(true)
-        context.evaluatePolicy(policy,
-                               localizedReason: L("Perch’ün gizlilik ekranını aç", "Reveal the screen behind Perch")) { [weak self] success, error in
+        let reason: String
+        switch action {
+        case .reveal:
+            reason = L("Perch’ün gizlilik ekranını aç", "Reveal the screen behind Perch")
+        case .setUpPIN:
+            reason = L("Away Guard için PIN belirle", "Set up an Away Guard PIN")
+        }
+        context.evaluatePolicy(policy, localizedReason: reason) { [weak self] success, error in
             let failure = (error as? LAError)?.code
             DispatchQueue.main.async {
                 guard let self, self.authentication === context else { return }
                 self.authentication = nil
                 if success {
                     self.uncover(recovered: true, immediately: true)
+                    if action == .setUpPIN {
+                        NotificationCenter.default.post(name: .openAwayGuardPassword, object: nil)
+                    }
                 } else if useTouchID, failure == .userFallback || failure == .biometryLockout
                             || failure == .biometryNotAvailable || failure == .biometryNotEnrolled {
-                    self.requestSystemUnlock(preferTouchID: false)
+                    self.requestSystemUnlock(preferTouchID: false, action: action)
                 } else {
                     self.overlay.setAuthenticating(false, failed: failure != .userCancel)
                 }

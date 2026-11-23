@@ -30,6 +30,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.rebuildMenu() }
             .store(in: &cancellables)
+
+        if CommandLine.arguments.contains("--setup-away-pin") {
+            DispatchQueue.main.async { [weak self] in self?.settingsWindow?.showAwayGuardPassword() }
+        }
     }
 
     private func rebuildMenu() {
