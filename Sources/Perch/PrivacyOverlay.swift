@@ -134,15 +134,21 @@ struct OverlayContent: View {
                     .opacity(model.shown ? 1 : 0)
                     .animation(.easeOut(duration: 0.3), value: model.shown)
 
-                if model.requestSystemUnlock != nil {
-                    HStack(spacing: 20) {
-                        content.frame(maxWidth: .infinity)
-                        OverlayUnlockPanel(model: model)
-                            .frame(width: min(270, geo.size.width * 0.32))
-                    }
-                    .padding(.horizontal, min(52, geo.size.width * 0.04))
+                if model.requestSystemUnlock == nil {
+                    content()
+                } else if geo.size.width >= 1020 {
+                    content()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .overlay(alignment: .trailing) {
+                            unlockPanel.padding(.trailing, 32)
+                        }
                 } else {
-                    content
+                    ViewThatFits(in: .vertical) {
+                        compactContent.fixedSize(horizontal: false, vertical: true)
+                        ScrollView {
+                            compactContent.padding(.vertical, 16)
+                        }
+                    }
                 }
             }
             .frame(width: geo.size.width, height: geo.size.height)
@@ -150,6 +156,18 @@ struct OverlayContent: View {
         .ignoresSafeArea()
         // Tarih/saat biçimi uygulamanın seçili diline uysun (sistem diline değil)
         .environment(\.locale, Locale(identifier: AppSettings.shared.isTurkish ? "tr_TR" : "en_US"))
+    }
+
+    private var unlockPanel: some View {
+        OverlayUnlockPanel(model: model).frame(width: 238)
+    }
+
+    private var compactContent: some View {
+        VStack(spacing: 22) {
+            content(compact: true)
+            unlockPanel
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private var backdrop: some View {
@@ -162,14 +180,14 @@ struct OverlayContent: View {
         }
     }
 
-    private var content: some View {
-        VStack(spacing: 30) {
+    private func content(compact: Bool = false) -> some View {
+        VStack(spacing: compact ? 16 : 30) {
             bird
 
             TimelineView(.everyMinute) { ctx in
                 VStack(spacing: 4) {
                     Text(ctx.date, format: .dateTime.hour().minute())
-                        .font(.system(size: 92, weight: .ultraLight, design: .rounded))
+                        .font(.system(size: compact ? 72 : 92, weight: .ultraLight, design: .rounded))
                         .monospacedDigit()
                     Text(ctx.date, format: .dateTime.weekday(.wide).day().month(.wide))
                         .font(.system(size: 15, weight: .regular))
@@ -184,11 +202,11 @@ struct OverlayContent: View {
             VStack(spacing: 6) {
                 Text(L("Perch nöbette", "Perch is on watch"))
                     .font(.system(size: 17, weight: .medium))
-                Text(model.requiresManualUnlock
-                     ? L("Ekranı açmak için sağdaki alanı kullan.", "Use the controls on the right to reveal the screen.")
-                     : L("Cihazın yaklaşınca ekran kendiliğinden açılır.", "Your screen reopens when your device returns."))
-                    .font(.system(size: 13))
-                    .foregroundStyle(.white.opacity(0.45))
+                if !model.requiresManualUnlock {
+                    Text(L("Cihazın yaklaşınca ekran kendiliğinden açılır.", "Your screen reopens when your device returns."))
+                        .font(.system(size: 13))
+                        .foregroundStyle(.white.opacity(0.45))
+                }
             }
         }
         .foregroundStyle(.white)
