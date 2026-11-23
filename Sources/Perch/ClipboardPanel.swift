@@ -62,7 +62,10 @@ struct ClipboardPanel: View {
         }
         .padding(.horizontal, 10)
         .frame(height: 26)
-        .background(Color.white.opacity(copied ? 0.16 : 0.07), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .notchSurface(in: RoundedRectangle(cornerRadius: 8),
+                      classic: .white.opacity(copied ? 0.16 : 0.07),
+                      glass: .white.opacity(copied ? 0.15 : 0.06),
+                      highlighted: copied)
         .contentShape(Rectangle())
         .onTapGesture { clipboard.copy(item) }
         .animation(.smooth(duration: 0.2), value: copied)
