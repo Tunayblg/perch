@@ -42,6 +42,7 @@ struct NotchView: View {
     @ObservedObject var settings = AppSettings.shared
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var hideNotice: UUID?
+    @State private var isHoveringHideButton = false
 
     var body: some View {
         let size = state.expanded ? state.expandedSize : state.collapsedSize
@@ -143,12 +144,14 @@ struct NotchView: View {
                     withAnimation(.easeOut(duration: 0.2)) { hideNotice = UUID() }
                 } label: {
                     Image(systemName: "eye")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.36))
+                        .font(.system(size: 8))
+                        .foregroundStyle(.white.opacity(isHoveringHideButton ? 0.36 : 0.16))
                         .frame(width: 24, height: 20)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .onHover { isHoveringHideButton = $0 }
+                .onDisappear { isHoveringHideButton = false }
                 .accessibilityLabel(L("Sekmeyi gizle", "Hide tab"))
                 .accessibilityHint(L("Ayarlar’dan geri açabilirsin.", "Restore it in Settings."))
                 .help(L("Sekmeyi gizle · Ayarlar’dan geri açabilirsin.",
