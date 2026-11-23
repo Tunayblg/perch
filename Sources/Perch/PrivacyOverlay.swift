@@ -72,7 +72,9 @@ final class PrivacyOverlay {
             w.hasShadow = false
             w.isReleasedWhenClosed = false
             w.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
-            w.contentView = NSHostingView(rootView: OverlayContent(model: model))
+            w.contentView = NSHostingView(rootView: OverlayContent(model: model) { [weak w] window in
+                window === w
+            })
             w.setFrame(screen.frame, display: true)
             w.orderFrontRegardless()
             windows.append(w)
@@ -121,6 +123,7 @@ final class PrivacyOverlay {
 
 struct OverlayContent: View {
     @ObservedObject var model: OverlayModel
+    var ownsWindow: (NSWindow) -> Bool = { _ in false }
 
     var body: some View {
         GeometryReader { geo in
@@ -163,7 +166,7 @@ struct OverlayContent: View {
     }
 
     private var unlockPanel: some View {
-        OverlayUnlockPanel(model: model).frame(width: 238)
+        OverlayUnlockPanel(model: model, ownsWindow: ownsWindow).frame(width: 238)
     }
 
     private var compactContent: some View {
@@ -244,6 +247,7 @@ struct OverlayContent: View {
 
 private struct OverlayUnlockPanel: View {
     @ObservedObject var model: OverlayModel
+    let ownsWindow: (NSWindow) -> Bool
     @State private var password = ""
     @State private var rejected = false
     @FocusState private var editing: Bool
@@ -317,11 +321,22 @@ private struct OverlayUnlockPanel: View {
         .overlay { RoundedRectangle(cornerRadius: 16).strokeBorder(.white.opacity(0.08)) }
         .environment(\.colorScheme, .dark)
         .onChange(of: model.shown) { _, shown in
-            if shown && model.verifyPassword != nil { editing = true }
+            if shown { focusPasswordField() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in
+            focusPasswordField()
         }
         .opacity(model.shown && !model.vanishing ? 1 : 0)
         .animation(.easeOut(duration: 0.25), value: model.shown)
         .animation(.easeIn(duration: 0.2), value: model.vanishing)
+    }
+
+    private func focusPasswordField() {
+        guard model.shown, model.verifyPassword != nil, !model.vanishing,
+              let window = NSApp.keyWindow, ownsWindow(window), !(window.firstResponder is NSTextView)
+        else { return }
+        editing = false
+        DispatchQueue.main.async { editing = true }
     }
 
     private func unlock() {
