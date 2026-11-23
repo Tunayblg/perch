@@ -33,7 +33,9 @@ struct TimerPanel: View {
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(planner.phase == .idle ? .black : .white)
                     .frame(width: 84, height: 26)
-                    .background(planner.phase == .idle ? accent : Color.white.opacity(0.16), in: Capsule())
+                    .notchSurface(in: Capsule(),
+                                  classic: planner.phase == .idle ? accent : .white.opacity(0.16),
+                                  glass: planner.phase == .idle ? accent : .white.opacity(0.10))
             }
             .buttonStyle(.plain)
             Text("\(planner.completedPomodoros) pomodoro")
@@ -65,7 +67,7 @@ struct TimerPanel: View {
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(.white)
                             .frame(width: 32, height: 26)
-                            .background(Color.white.opacity(0.14), in: Capsule())
+                            .notchSurface(in: Capsule(), classic: .white.opacity(0.14), glass: .white.opacity(0.08))
                     }
                     .buttonStyle(.plain)
                 }
