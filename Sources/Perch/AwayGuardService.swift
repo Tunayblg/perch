@@ -81,6 +81,7 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
     @Published var holdingOff = false
     /// Koruma kapalıyken sinyali elle canlı izleme (kalibrasyon). Panel kapanınca kendiliğinden kapanır.
     @Published var previewing = false
+    @Published private(set) var waitingForDeviceSince: Date?
 
     @Published var selectedID: UUID?
     @Published var selectedName: String
@@ -177,6 +178,7 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
     // MARK: - Cihaz seçimi
 
     func select(_ device: Device) {
+        if selectedID == nil { previewing = false }
         selectedID = device.id
         selectedName = device.name
         UserDefaults.standard.set(device.id.uuidString, forKey: "awayDeviceID")
@@ -187,6 +189,7 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
         baselineValue = UserDefaults.standard.object(forKey: "awayBaseline." + device.id.uuidString) as? Double
         baseline = baselineValue.map { Int($0.rounded()) }
         reset()
+        refreshScanning()
     }
 
     func cycleDevice(_ direction: Int) {
@@ -246,6 +249,7 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
         isTesting = false
         manualCover = false
         returnStreak = 0
+        waitingForDeviceSince = nil
         snoozeUntil = Date().addingTimeInterval(10)
     }
 
@@ -277,7 +281,7 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
         refreshScanning()
     }
 
-    private func uncover() {
+    private func uncover(recovered: Bool = false) {
         cancelAuthentication()
         if overlay.isShown { music?.endProgress() }
         overlay.hide()
@@ -288,6 +292,9 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
         awaySince = nil
         awayFor = 0
         returnStreak = 0
+        if recovered, enabled, selectedID != nil {
+            waitingForDeviceSince = Date()
+        }
         snoozeUntil = Date().addingTimeInterval(20) // dönüşte hemen tekrar örtülmesin
         refreshScanning()
     }
@@ -295,7 +302,7 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
     @discardableResult
     func unlock(with password: String) -> Bool {
         guard phase == .covered, AppSettings.shared.verifiesAwayPassword(password) else { return false }
-        uncover()
+        uncover(recovered: true)
         return true
     }
 
@@ -315,7 +322,7 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
                 guard let self, self.authentication === context else { return }
                 self.authentication = nil
                 if success {
-                    self.uncover()
+                    self.uncover(recovered: true)
                 } else {
                     self.overlay.setAuthenticating(false, failed: !cancelled)
                 }
@@ -331,10 +338,10 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
 
     // MARK: - Tarama (enerji dostu)
 
-    /// Koruma kapalıyken yalnızca: cihaz seçmek için tarama gerekiyorsa (cihaz yok) ya da elle önizleme açıksa tara.
-    private var wantsTicks: Bool {
-        enabled || phase != .present || (viewing && (selectedID == nil || previewing))
-    }
+    private var wantsScanning: Bool { enabled || (viewing && previewing) }
+
+    // Test geri sayımı ve test örtüsünün süresi Bluetooth olmadan da ilerler.
+    private var wantsTicks: Bool { wantsScanning || phase == .countdown || testing }
 
     /// Panel kapanınca çağrılır: önizleme ve görünürlük bayrakları sıfırlanır, tarama gerekmiyorsa durur.
     func panelClosed() { viewerDisappeared() }
@@ -345,15 +352,18 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
     }
 
     private func refreshScanning() {
+        if wantsScanning {
+            if central == nil { central = CBCentralManager(delegate: self, queue: nil) }
+            applyScanDuty()
+        } else {
+            central?.stopScan()
+        }
         if wantsTicks {
-            if central == nil { central = CBCentralManager(delegate: self, queue: nil) } // izin penceresi burada çıkar
             if timer == nil {
                 timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in self?.tick() }
                 timer?.tolerance = 0.2
             }
-            applyScanDuty()
         } else {
-            central?.stopScan()
             timer?.invalidate()
             timer = nil
         }
@@ -361,7 +371,7 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
 
     /// Sekme açıkken (grafik) her saniye taze örnek; arkada ise 4 sn'de bir 2 sn'lik tarama patlaması.
     private func applyScanDuty() {
-        guard let central, central.state == .poweredOn else { return }
+        guard wantsScanning, let central, central.state == .poweredOn else { return }
         let continuous = viewing || phase != .present
         let slot = tickCount % 2
         if continuous || slot == 0 {
@@ -446,6 +456,11 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
         switch phase {
         case .present:
             guard enabled, selectedID != nil else { return }
+            if let since = waitingForDeviceSince {
+                guard let last = samples.last, last.time >= since,
+                      now.timeIntervalSince(last.time) < 4, last.rssi >= threshold + 2 else { return }
+                waitingForDeviceSince = nil
+            }
             let lost = seenSelected && (lastSeen.map { now.timeIntervalSince($0) > lostSeconds } ?? true)
             let weak = smoothed.map { $0 < threshold } ?? false
             let away = seenSelected && (lost || weak)        // cihaz hiç görülmediyse örtme

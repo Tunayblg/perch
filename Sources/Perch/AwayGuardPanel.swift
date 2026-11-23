@@ -52,12 +52,31 @@ struct AwayGuardPanel: View {
 
             mainButton
 
-            Text(statusText)
-                .font(.system(size: 11))
-                .foregroundStyle(statusColor)
-                .lineLimit(2)
-                .frame(height: 26, alignment: .topLeading)
+            HStack(spacing: 6) {
+                manualCoverButton
+                Text(statusText)
+                    .font(.system(size: 10))
+                    .foregroundStyle(statusColor)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .help(statusText)
+            }
+            .frame(height: 26)
         }
+    }
+
+    private var manualCoverButton: some View {
+        Button(action: away.coverManually) {
+            Label(L("Elle gizle", "Hide now"), systemImage: "lock")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.85))
+                .padding(.horizontal, 7)
+                .frame(height: 22)
+                .notchSurface(in: Capsule(), classic: .white.opacity(0.10), glass: .white.opacity(0.07))
+        }
+        .buttonStyle(.plain)
+        .disabled(away.phase == .covered)
+        .help(L("Bluetooth cihazı gerekmeden ekranı gizle", "Hide the screen without a Bluetooth device"))
     }
 
     /// Büyük aç/kapa düğmesi. Geri sayımda "İptal"e dönüşür.
@@ -133,12 +152,23 @@ struct AwayGuardPanel: View {
     private var deviceRow: some View {
         HStack(spacing: 4) {
             chevron("chevron.left") { away.cycleDevice(-1) }
-            Text(away.selectedName.isEmpty ? L("Cihaz seç", "Pick a device") : away.selectedName)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.white)
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .frame(maxWidth: .infinity)
+            Group {
+                if away.selectedID == nil, !away.previewing {
+                    Button { away.setPreview(true) } label: {
+                        Text(L("Cihaz ara", "Find device"))
+                            .frame(maxWidth: .infinity)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Text(away.selectedName.isEmpty ? L("Cihaz seç", "Pick a device") : away.selectedName)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .font(.system(size: 11, weight: .medium))
+            .foregroundStyle(.white)
+            .lineLimit(1)
+            .truncationMode(.tail)
             chevron("chevron.right") { away.cycleDevice(1) }
         }
         .padding(.horizontal, 3)
@@ -259,14 +289,19 @@ struct AwayGuardPanel: View {
     // MARK: - Durum metni
 
     private var statusText: String {
+        if away.phase == .covered { return L("Ekran gizli", "Screen hidden") }
+        if away.phase == .countdown { return L("Ekran gizleniyor: \(away.countdown ?? 0) sn", "Hiding screen in \(away.countdown ?? 0) s") + (away.isTesting ? " (test)" : "") }
+        if away.waitingForDeviceSince != nil { return L("Cihaz dönene kadar beklemede", "Paused until device returns") }
         switch away.bluetooth {
         case .unauthorized: return L("Bluetooth izni yok. Sistem Ayarları → Gizlilik → Bluetooth", "No Bluetooth permission. System Settings → Privacy → Bluetooth")
         case .off: return L("Bluetooth kapalı", "Bluetooth is off")
         default: break
         }
-        if away.selectedID == nil { return L("Önce yukarıdan iPhone/Watch seç", "Pick your iPhone/Watch above first") }
-        if away.phase == .countdown { return L("Ekran gizleniyor: \(away.countdown ?? 0) sn", "Hiding screen in \(away.countdown ?? 0) s") + (away.isTesting ? " (test)" : "") }
-        if away.phase == .covered { return L("Ekran gizli, dönünce açılır", "Screen hidden, reopens when you're back") }
+        if away.selectedID == nil {
+            return away.previewing && away.devices.isEmpty
+                ? L("Cihaz aranıyor…", "Looking for devices…")
+                : L("Otomatik koruma için cihaz seç", "Choose a device for auto guard")
+        }
         if !away.seenSelected { return L("Cihaz aranıyor…", "Looking for the device…") }
         if away.enabled, away.holdingOff { return L("Sinyal zayıf ama bilgisayarı kullanıyorsun, ekran açık", "Weak signal but you're using the Mac, screen stays on") }
         if !away.enabled { return away.previewing ? L("Kapalı, önizleme açık", "Off, preview is on") : L("Kapalı, sinyal izlenmiyor", "Off, not monitoring") }
