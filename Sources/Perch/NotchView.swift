@@ -41,6 +41,7 @@ struct NotchView: View {
     @ObservedObject var awayGuard: AwayGuardService
     @ObservedObject var settings = AppSettings.shared
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @State private var hideNotice: UUID?
 
     var body: some View {
         let size = state.expanded ? state.expandedSize : state.collapsedSize
@@ -97,18 +98,64 @@ struct NotchView: View {
             }
         }
         .frame(width: size.width, height: size.height)
+        .overlay(alignment: .bottomTrailing) {
+            if state.expanded {
+                tabVisibilityControl(for: effectiveTab)
+                    .padding(.trailing, 14)
+                    .padding(.bottom, 2)
+            }
+        }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .animation(.smooth(duration: 0.42), value: state.expanded)
         .animation(.smooth(duration: 0.36), value: state.showsBadge)
         .animation(.smooth(duration: 0.36), value: size.width)
         .environment(\.accent, settings.effectiveAccent.color)
         .environment(\.notchAppearance, settings.appearance)
+        .task(id: hideNotice) {
+            guard hideNotice != nil else { return }
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeOut(duration: 0.2)) { hideNotice = nil }
+        }
         .id(settings.language) // dil değişince tüm arayüz yeniden kurulur
     }
 
     /// Seçili sekme gizlendiyse ilk görünür sekmeye düş.
     private var effectiveTab: NotchTab {
         settings.visibleTabs.contains(state.tab) ? state.tab : (settings.visibleTabs.first ?? .settings)
+    }
+
+    private func tabVisibilityControl(for tab: NotchTab) -> some View {
+        HStack(spacing: 4) {
+            if hideNotice != nil {
+                Text(L("Ayarlar’dan geri açabilirsin.", "Restore it in Settings."))
+                    .font(.system(size: 10))
+                    .foregroundStyle(.white.opacity(0.67))
+                    .padding(.trailing, 4)
+                    .allowsHitTesting(false)
+                    .transition(.opacity)
+            }
+            if tab != .settings {
+                Button {
+                    guard settings.isVisible(tab) else { return }
+                    settings.toggle(tab)
+                    state.tab = effectiveTab
+                    withAnimation(.easeOut(duration: 0.2)) { hideNotice = UUID() }
+                } label: {
+                    Image(systemName: "eye")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.36))
+                        .frame(width: 24, height: 20)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(L("Sekmeyi gizle", "Hide tab"))
+                .accessibilityHint(L("Ayarlar’dan geri açabilirsin.", "Restore it in Settings."))
+                .help(L("Sekmeyi gizle · Ayarlar’dan geri açabilirsin.",
+                        "Hide tab · Restore it in Settings."))
+            }
+        }
+        .frame(minHeight: 20)
     }
 
     /// Sekme düğmeleri çentiğin iki yanında (2 sol, 2 sağ); çentiğin kendisi ortada kalır.

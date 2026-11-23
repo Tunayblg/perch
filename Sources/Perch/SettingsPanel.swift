@@ -56,9 +56,10 @@ struct SettingsPanel: View {
                 smallButton("chevron.left") { settings.move(selected, by: -1) }
                 smallButton("chevron.right") { settings.move(selected, by: 1) }
             }
-            Text(L("Gizli sekmeler silik görünür.", "Hidden tabs look dimmed."))
+            Text(L("Gizli sekmeyi gözle geri aç.", "Use the eye to show a hidden tab."))
                 .font(.system(size: 10))
                 .foregroundStyle(.white.opacity(0.4))
+                .lineLimit(1)
         }
     }
 
