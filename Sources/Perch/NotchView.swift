@@ -304,29 +304,38 @@ struct MusicPanel: View {
     }
 
     private var controls: some View {
-        HStack(spacing: 30) {
-            Spacer()
-            button("backward.fill", 20) { music.previous() }
-            button(music.isPlaying ? "pause.fill" : "play.fill", 30, primary: true) { music.togglePlayPause() }
-            button("forward.fill", 20) { music.next() }
-            Spacer()
+        HStack(spacing: 2) {
+            transportButton("backward.end.fill", title: L("Önceki parça", "Previous track"), action: music.previous)
+            transportButton(
+                music.isPlaying ? "pause.fill" : "play.fill",
+                title: music.isPlaying ? L("Duraklat", "Pause") : L("Oynat", "Play"),
+                primary: true,
+                action: music.togglePlayPause
+            )
+            transportButton("forward.end.fill", title: L("Sonraki parça", "Next track"), action: music.next)
         }
+        .padding(4)
+        .notchSurface(in: Capsule(), classic: .white.opacity(0.07), glass: .white.opacity(0.06))
+        .frame(maxWidth: .infinity)
         .disabled(!music.hasTrack)
         .opacity(music.hasTrack ? 1 : 0.35)
     }
 
-    private func button(_ symbol: String, _ size: CGFloat, primary: Bool = false,
-                        action: @escaping () -> Void) -> some View {
+    private func transportButton(_ symbol: String, title: String, primary: Bool = false,
+                                 action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .font(.system(size: size))
-                .foregroundStyle(.white)
-                .frame(width: 34, height: 34)
-                .notchSurface(in: Circle(), classic: .clear, glass: primary ? .white.opacity(0.09) : .clear,
+                .font(.system(size: primary ? 15 : 12, weight: .semibold))
+                .foregroundStyle(.white.opacity(primary ? 1 : 0.75))
+                .frame(width: primary ? 32 : 38, height: 32)
+                .notchSurface(in: Circle(), classic: primary ? accent.opacity(0.19) : .clear,
+                              glass: primary ? accent.opacity(0.19) : .clear,
                               highlighted: primary)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .help(title)
     }
 
     private func format(_ s: Double) -> String {
