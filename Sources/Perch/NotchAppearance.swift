@@ -32,7 +32,7 @@ struct NotchBackground: View {
                     LinearGradient(colors: [.black.opacity(0.23), .clear],
                                    startPoint: .top, endPoint: .center)
                 )
-                shape.stroke(
+                NotchShape(bottomRadius: shape.bottomRadius, includesTopEdge: false).stroke(
                     LinearGradient(colors: [.white.opacity(0.23), .white.opacity(0.05)],
                                    startPoint: .topLeading, endPoint: .bottomTrailing),
                     lineWidth: 1
