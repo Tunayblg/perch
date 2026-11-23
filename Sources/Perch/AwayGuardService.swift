@@ -121,6 +121,7 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
 
     /// Geri sayım başlayınca çağrılır (panelin kendiliğinden açılması için).
     var onCountdownStart: (() -> Void)?
+    var onPINRequired: ((@escaping () -> Void) -> Void)?
 
     // MARK: - Sabitler
 
@@ -152,13 +153,15 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
 
     override init() {
         let d = UserDefaults.standard
-        enabled = d.bool(forKey: "awayEnabled")
+        let wasEnabled = d.bool(forKey: "awayEnabled")
+        enabled = wasEnabled && AppSettings.shared.hasAwayPassword
         sensitivity = AwaySensitivity(rawValue: d.string(forKey: "awaySensitivity") ?? "") ?? .medium
         selectedID = (d.string(forKey: "awayDeviceID")).flatMap(UUID.init(uuidString:))
         selectedName = d.string(forKey: "awayDeviceName") ?? ""
         super.init()
         baselineValue = selectedID.flatMap { d.object(forKey: "awayBaseline." + $0.uuidString) as? Double }
         baseline = baselineValue.map { Int($0.rounded()) }
+        if wasEnabled && !enabled { d.set(false, forKey: "awayEnabled") }
         if enabled { refreshScanning() }
     }
 
@@ -201,6 +204,23 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
 
     // MARK: - Eylemler
 
+    func toggleProtection() {
+        if enabled {
+            enabled = false
+        } else {
+            enableProtection()
+        }
+    }
+
+    private func enableProtection() {
+        guard !enabled, selectedID != nil else { return }
+        guard AppSettings.shared.hasAwayPassword else {
+            onPINRequired? { [weak self] in self?.enableProtection() }
+            return
+        }
+        enabled = true
+    }
+
     /// 3 sn'lik geri sayımla gizlilik ekranını dener; ekran 4 sn sonra kendiliğinden kalkar.
     func testCover() {
         guard phase == .present else { return }
@@ -222,6 +242,10 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
 
     func coverManually() {
         guard phase != .covered else { return }
+        guard AppSettings.shared.hasAwayPassword else {
+            onPINRequired? { [weak self] in self?.coverManually() }
+            return
+        }
         testing = false
         isTesting = false
         cover(manual: true)

@@ -10,8 +10,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         let controller = NotchController()
         self.controller = controller
+        let settingsWindow = SettingsWindowController(voice: controller.voice)
+        self.settingsWindow = settingsWindow
+        controller.awayGuard.onPINRequired = { [weak settingsWindow] onSaved in
+            settingsWindow?.showAwayGuardPassword(onSaved: onSaved)
+        }
         controller.start()
-        settingsWindow = SettingsWindowController(voice: controller.voice)
 
         // Menü çubuğu simgesi: ayarlar ve çıkış
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -31,9 +35,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .sink { [weak self] _ in self?.rebuildMenu() }
             .store(in: &cancellables)
 
-        if CommandLine.arguments.contains("--setup-away-pin") {
-            DispatchQueue.main.async { [weak self] in self?.settingsWindow?.showAwayGuardPassword() }
-        }
     }
 
     private func rebuildMenu() {

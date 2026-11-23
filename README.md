@@ -41,7 +41,7 @@ Working in a café, an open office or a shared flat? Walk away from your Mac and
 - **Opens instantly.** The moment your device is back in range the screen is yours again. No waiting, no clicking.
 - **Easy on the battery.** Scanning is duty-cycled in the background and fully off when the guard is off. In my measurements on an Apple-silicon MacBook Air it costs about **0.5% CPU** with protection on, and the privacy-screen animation only runs for about a second while it appears or disappears.
 - **Private by design.** Passive Bluetooth signal-strength reading only: no camera, no microphone, no accounts, nothing leaves your Mac.
-- **You stay in control.** Set a four-digit PIN under **Away Guard → PIN**. Use it to reveal the screen without Bluetooth or your Mac password. Touch ID or your Mac password also works. To hide the screen without a device, click **Hide now** or press `⌃⌥P`.
+- **You stay in control.** Away Guard asks for a four-digit backup PIN before you enable protection or hide the screen if you haven't set one. Use it to reveal the screen without Bluetooth or your Mac password and change it under **Away Guard → PIN**. Touch ID or your Mac password also works. To hide the screen without a device, click **Hide now** or press `⌃⌥P`.
 
 > **Honest limits (it's a beta).** The privacy screen is a cover. To use the macOS screen lock as well, enable the separate option in Settings and use your Mac password or Touch ID. Bluetooth signal strength is approximate: walls, pockets and body position change it. If your phone stays on the desk the Mac thinks you're nearby. Automatic detection works with Apple devices your Mac already recognises.
 

@@ -41,7 +41,7 @@ Kafede, açık ofiste ya da ortak evde mi çalışıyorsun? Mac'inin başından 
 - **Anında açılıyor.** Cihazın menzile girdiği an ekran yine senin. Bekleme yok, tıklama yok.
 - **Pil dostu.** Arka planda tarama kısa aralıklarla yapılır, koruma kapalıyken hiç yapılmaz. Apple Silicon bir MacBook Air'de yaptığım ölçümlerde koruma açıkken yaklaşık **%0,5 CPU** harcıyor, gizlilik ekranı animasyonu da sadece belirirken ve kaybolurken yaklaşık bir saniye çalışıyor.
 - **Tasarımdan gizli.** Yalnızca Bluetooth sinyal gücü okunur: kamera yok, mikrofon yok, hesap yok, Mac'inden hiçbir şey çıkmaz.
-- **Kontrol sende.** **Away Guard → PIN** bölümünde dört rakamlı bir PIN belirle. Bu PIN, Bluetooth veya Mac parolan olmadan gizlilik örtüsünü kaldırır. Touch ID veya Mac parolası da kullanılabilir. Cihaz seçmeden ekranı gizlemek için **Elle gizle** düğmesine veya `⌃⌥P` kısayoluna bas.
+- **Kontrol sende.** Yedek kodun yoksa Away Guard, korumayı açmadan veya ekranı elle gizlemeden önce dört rakamlı bir PIN belirlemeni ister. Bu PIN gizlilik örtüsünü Bluetooth veya Mac parolan olmadan kaldırır. PIN’i **Away Guard → PIN** bölümünden değiştirebilirsin. Touch ID veya Mac parolası da kullanılabilir. Cihaz seçmeden ekranı gizlemek için **Elle gizle** düğmesine veya `⌃⌥P` kısayoluna bas.
 
 > **Dürüst sınırlar (bu bir beta).** Gizlilik ekranı bir örtüdür. macOS ekran kilidini de kullanmak için Ayarlar’daki ayrı seçeneği etkinleştir ve Mac parolanı veya Touch ID’yi kullan. Bluetooth sinyal gücü yaklaşıktır: duvarlar, cepler ve vücut konumu etkiler. Telefonun masada kalırsa Mac seni yakında sanar. Otomatik algılama Mac'inin tanıdığı Apple cihazlarıyla çalışır.
 

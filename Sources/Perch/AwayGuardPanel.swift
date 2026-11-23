@@ -98,7 +98,7 @@ struct AwayGuardPanel: View {
         }
         let disabled = away.selectedID == nil && !counting
         return Button {
-            if counting { away.cancelCountdown() } else { away.enabled.toggle() }
+            if counting { away.cancelCountdown() } else { away.toggleProtection() }
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: symbol)

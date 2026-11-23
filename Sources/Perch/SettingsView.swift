@@ -71,6 +71,7 @@ struct SettingsView: View {
 final class SettingsWindowController: NSObject, NSWindowDelegate {
     private var window: NSWindow?
     private var passwordWindow: NSWindow?
+    private var onPINSaved: (() -> Void)?
     private let voice: VoiceNoteService
 
     init(voice: VoiceNoteService) { self.voice = voice }
@@ -94,7 +95,9 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         window?.makeKeyAndOrderFront(nil)
     }
 
-    func showAwayGuardPassword() {
+    func showAwayGuardPassword(onSaved: (() -> Void)? = nil) {
+        if let onSaved { onPINSaved = onSaved }
+        NSApp.activate(ignoringOtherApps: true)
         if let passwordWindow, passwordWindow.isVisible {
             passwordWindow.makeKeyAndOrderFront(nil)
             return
@@ -109,18 +112,22 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         w.isMovableByWindowBackground = true
         w.standardWindowButton(.miniaturizeButton)?.isHidden = true
         w.standardWindowButton(.zoomButton)?.isHidden = true
-        let editor = NSHostingView(rootView: AwayGuardPasswordEditor { [weak w] in w?.close() })
+        let editor = NSHostingView(rootView: AwayGuardPasswordEditor { [weak self, weak w] saved in
+            let activate = saved ? self?.onPINSaved : nil
+            w?.close()
+            activate?()
+        })
         w.contentView = editor
         w.setContentSize(editor.fittingSize)
         w.center()
         passwordWindow = w
-        NSApp.activate(ignoringOtherApps: true)
         w.makeKeyAndOrderFront(nil)
     }
 
     func windowWillClose(_ notification: Notification) {
         guard let window = notification.object as? NSWindow, window === passwordWindow else { return }
         passwordWindow = nil
+        onPINSaved = nil
     }
 }
 
@@ -132,7 +139,7 @@ private struct AwayGuardPasswordEditor: View {
     @State private var confirmation = ""
     @State private var error: String?
     @FocusState private var focusedField: Field?
-    let close: () -> Void
+    let close: (Bool) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -147,9 +154,11 @@ private struct AwayGuardPasswordEditor: View {
                     Text("Away Guard PIN")
                         .font(.system(size: 14, weight: .semibold))
                         .accessibilityAddTraits(.isHeader)
-                    Text(L("Mac parolandan ayrı, 4 rakamlı bir PIN.", "A separate 4-digit PIN for Away Guard."))
+                    Text(L("Watch’un şarjı biterse veya Bluetooth kapanırsa ekranı bu 4 rakamlı PIN’le açabilirsin.",
+                           "Use this 4-digit PIN if your Watch runs out of power or Bluetooth is off."))
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
 
@@ -181,7 +190,7 @@ private struct AwayGuardPasswordEditor: View {
         }
         .padding(18)
         .frame(width: 310)
-        .onExitCommand(perform: close)
+        .onExitCommand { close(false) }
         .onAppear {
             DispatchQueue.main.async { focusedField = .password }
         }
@@ -219,6 +228,6 @@ private struct AwayGuardPasswordEditor: View {
             error = L("PIN kaydedilemedi.", "Could not save the PIN.")
             return
         }
-        close()
+        close(true)
     }
 }
