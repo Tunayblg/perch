@@ -22,6 +22,7 @@ enum NotchAppearance: String, CaseIterable, Identifiable {
 /// Kullanıcı ayarları (UserDefaults'ta saklanır).
 final class AppSettings: ObservableObject {
     static let shared = AppSettings()
+    private static let awayPasswordKey = "awayPasswordVerifier"
 
     @Published var language: AppLanguage {
         didSet { UserDefaults.standard.set(language.rawValue, forKey: "language") }
@@ -36,6 +37,7 @@ final class AppSettings: ObservableObject {
     @Published var awayAlsoLock: Bool {
         didSet { UserDefaults.standard.set(awayAlsoLock, forKey: "awayAlsoLock") }
     }
+    @Published private var awayPassword: AwayGuardPassword?
     @Published var accent: AccentChoice {
         didSet { UserDefaults.standard.set(accent.rawValue, forKey: "accent") }
     }
@@ -61,6 +63,7 @@ final class AppSettings: ObservableObject {
         accent = AccentChoice(rawValue: d.string(forKey: "accent") ?? "") ?? .white
         appearance = NotchAppearance(rawValue: d.string(forKey: "notchAppearance") ?? "") ?? .classic
         awayAlsoLock = d.bool(forKey: "awayAlsoLock")
+        awayPassword = d.data(forKey: Self.awayPasswordKey).flatMap(AwayGuardPassword.init(data:))
 
         // Kayıtlı sıra + sonradan eklenen yeni sekmeler
         var order = (d.stringArray(forKey: "tabOrder") ?? []).compactMap(NotchTab.init(rawValue:))
@@ -70,6 +73,20 @@ final class AppSettings: ObservableObject {
         tabOrder = order
         hiddenTabs = Set((d.stringArray(forKey: "hiddenTabs") ?? []).compactMap(NotchTab.init(rawValue:)))
         launchAtLogin = SMAppService.mainApp.status == .enabled
+    }
+
+    var hasAwayPassword: Bool { awayPassword != nil }
+
+    @discardableResult
+    func setAwayPassword(_ password: String) -> Bool {
+        guard let verifier = AwayGuardPassword(password: password) else { return false }
+        UserDefaults.standard.set(verifier.data, forKey: Self.awayPasswordKey)
+        awayPassword = verifier
+        return true
+    }
+
+    func verifiesAwayPassword(_ password: String) -> Bool {
+        awayPassword?.matches(password) == true
     }
 
     // MARK: - Sekmeler

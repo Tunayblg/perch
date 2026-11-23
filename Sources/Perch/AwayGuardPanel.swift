@@ -3,6 +3,7 @@ import SwiftUI
 /// Away Guard (beta): cihaz seç, canlı sinyal grafiğini izle, eşiği ayarla, kilidi test et.
 struct AwayGuardPanel: View {
     @ObservedObject var away: AwayGuardService
+    @ObservedObject private var settings = AppSettings.shared
     @Environment(\.accent) private var accent
 
     var body: some View {
@@ -31,6 +32,20 @@ struct AwayGuardPanel: View {
                     .padding(.vertical, 1)
                     .background(Color.orange, in: Capsule())
                 Spacer(minLength: 0)
+                Button {
+                    NotificationCenter.default.post(name: .openAwayGuardPassword, object: nil)
+                } label: {
+                    Label(L("Şifre", "Password"), systemImage: "key.fill")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.8))
+                        .padding(.horizontal, 7)
+                        .frame(height: 20)
+                        .notchSurface(in: Capsule(), classic: .white.opacity(0.10), glass: .white.opacity(0.07))
+                }
+                .buttonStyle(.plain)
+                .help(settings.hasAwayPassword
+                      ? L("Away Guard şifresini değiştir", "Change the Away Guard password")
+                      : L("Away Guard şifresi belirle", "Set an Away Guard password"))
             }
 
             deviceRow

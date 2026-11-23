@@ -66,4 +66,5 @@ extension EnvironmentValues {
 
 extension Notification.Name {
     static let openSettingsWindow = Notification.Name("openSettingsWindow")
+    static let openAwayGuardPassword = Notification.Name("openAwayGuardPassword")
 }

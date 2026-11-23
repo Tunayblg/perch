@@ -22,6 +22,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.addObserver(forName: .openSettingsWindow, object: nil, queue: .main) { [weak self] _ in
             self?.settingsWindow?.show()
         }
+        NotificationCenter.default.addObserver(forName: .openAwayGuardPassword, object: nil, queue: .main) { [weak self] _ in
+            self?.settingsWindow?.showAwayGuardPassword()
+        }
 
         AppSettings.shared.$language
             .receive(on: DispatchQueue.main)
