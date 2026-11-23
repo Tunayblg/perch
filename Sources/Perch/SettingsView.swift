@@ -99,12 +99,19 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
             passwordWindow.makeKeyAndOrderFront(nil)
             return
         }
-        let w = NSWindow(contentRect: .zero, styleMask: [.titled, .closable],
+        let w = NSWindow(contentRect: .zero, styleMask: [.titled, .closable, .fullSizeContentView],
                          backing: .buffered, defer: false)
         w.isReleasedWhenClosed = false
         w.delegate = self
         w.title = L("Away Guard şifresi", "Away Guard password")
-        w.contentView = NSHostingView(rootView: AwayGuardPasswordEditor { [weak w] in w?.close() })
+        w.titleVisibility = .hidden
+        w.titlebarAppearsTransparent = true
+        w.isMovableByWindowBackground = true
+        w.standardWindowButton(.miniaturizeButton)?.isHidden = true
+        w.standardWindowButton(.zoomButton)?.isHidden = true
+        let editor = NSHostingView(rootView: AwayGuardPasswordEditor { [weak w] in w?.close() })
+        w.contentView = editor
+        w.setContentSize(editor.fittingSize)
         w.center()
         passwordWindow = w
         NSApp.activate(ignoringOtherApps: true)
@@ -118,34 +125,81 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 }
 
 private struct AwayGuardPasswordEditor: View {
+    private enum Field { case password, confirmation }
+
     @ObservedObject private var settings = AppSettings.shared
     @State private var password = ""
     @State private var confirmation = ""
     @State private var error: String?
+    @FocusState private var focusedField: Field?
     let close: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(L("Bu şifreyle Bluetooth cihazın yanında olmasa da Perch’ün gizlilik ekranını açabilirsin.",
-                   "This password opens Perch’s privacy screen even when your Bluetooth device is unavailable."))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-            SecureField(L("Yeni şifre", "New password"), text: $password)
-            SecureField(L("Şifreyi tekrarla", "Confirm password"), text: $confirmation)
-                .onSubmit(save)
-            Text(error ?? L("4 ile 128 karakter arasında bir şifre seç.", "Choose a password from 4 to 128 characters."))
-                .font(.caption)
-                .foregroundStyle(error == nil ? Color.secondary : Color.red)
-            HStack {
-                Spacer()
-                Button(L("Vazgeç", "Cancel"), action: close)
-                    .keyboardShortcut(.cancelAction)
-                Button(L("Kaydet", "Save"), action: save)
-                    .keyboardShortcut(.defaultAction)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 10) {
+                Image(systemName: "key")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 34, height: 34)
+                    .background(.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(L("Away Guard şifresi", "Away Guard password"))
+                        .font(.system(size: 14, weight: .semibold))
+                        .accessibilityAddTraits(.isHeader)
+                    Text(L("Bluetooth olmadan da ekranı açar.", "Reveal the screen without Bluetooth."))
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            VStack(spacing: 7) {
+                passwordField(L("Yeni şifre", "New password"), text: $password, field: .password)
+                    .onSubmit { focusedField = .confirmation }
+                passwordField(L("Şifreyi tekrarla", "Confirm password"), text: $confirmation, field: .confirmation)
+                    .onSubmit(save)
+            }
+
+            HStack(spacing: 10) {
+                Text(error ?? L("En az 4 karakter.", "At least 4 characters."))
+                    .font(.system(size: 11))
+                    .foregroundStyle(error == nil ? Color.secondary : Color.red)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                Button(action: save) {
+                    Text(L("Kaydet", "Save"))
+                        .font(.system(size: 12, weight: .semibold))
+                        .padding(.horizontal, 16)
+                        .frame(height: 28)
+                        .background(.primary.opacity(0.12), in: Capsule())
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
             }
         }
-        .padding(20)
-        .frame(width: 360)
+        .padding(18)
+        .frame(width: 310)
+        .onExitCommand(perform: close)
+        .onAppear {
+            DispatchQueue.main.async { focusedField = .password }
+        }
+        .onChange(of: password) { _, _ in error = nil }
+        .onChange(of: confirmation) { _, _ in error = nil }
+    }
+
+    private func passwordField(_ title: String, text: Binding<String>, field: Field) -> some View {
+        SecureField(title, text: text)
+            .font(.system(size: 13))
+            .textFieldStyle(.plain)
+            .focused($focusedField, equals: field)
+            .padding(.horizontal, 11)
+            .frame(height: 32)
+            .background(.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 8))
+            .overlay {
+                RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(.primary.opacity(focusedField == field ? 0.22 : 0.08))
+                    .allowsHitTesting(false)
+            }
     }
 
     private func save() {
