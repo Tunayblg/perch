@@ -25,15 +25,22 @@ struct NotchBackground: View {
                     shape.fill(Color(white: 0.14))
                 } else {
                     NotchBlur()
-                    shape.fill(.black.opacity(0.34))
+                    shape.fill(.black.opacity(0.22))
                 }
 
                 shape.fill(
-                    LinearGradient(colors: [.black.opacity(0.23), .clear],
-                                   startPoint: .top, endPoint: .center)
+                    LinearGradient(stops: [
+                        .init(color: .white.opacity(0.13), location: 0),
+                        .init(color: .clear, location: 0.52),
+                        .init(color: .black.opacity(0.13), location: 1)
+                    ], startPoint: .topLeading, endPoint: .bottomTrailing)
+                )
+                shape.fill(
+                    RadialGradient(colors: [.white.opacity(0.10), .clear],
+                                   center: .bottomTrailing, startRadius: 0, endRadius: 140)
                 )
                 NotchShape(bottomRadius: shape.bottomRadius, includesTopEdge: false).stroke(
-                    LinearGradient(colors: [.white.opacity(0.23), .white.opacity(0.05)],
+                    LinearGradient(colors: [.white.opacity(0.36), .white.opacity(0.08)],
                                    startPoint: .topLeading, endPoint: .bottomTrailing),
                     lineWidth: 1
                 )
@@ -88,7 +95,7 @@ private struct NotchSurface<S: InsettableShape>: ViewModifier {
                     .overlay {
                         if highlighted {
                             shape.strokeBorder(
-                                LinearGradient(colors: [.white.opacity(0.18), .white.opacity(0.04)],
+                                LinearGradient(colors: [.white.opacity(0.23), .white.opacity(0.055)],
                                                startPoint: .topLeading, endPoint: .bottomTrailing),
                                 lineWidth: 1
                             )
