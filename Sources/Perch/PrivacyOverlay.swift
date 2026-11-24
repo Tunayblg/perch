@@ -265,15 +265,24 @@ private struct OverlayUnlockPanel: View {
                             text: Binding(get: { password }, set: {
                                 password = model.usesPIN ? AwayGuardPassword.pinDigits(in: $0) : $0
                             }))
+                    .textFieldStyle(.plain)
                     .focused($editing)
                     .onSubmit(unlock)
                     .onChange(of: password) { _, value in
                         if !value.isEmpty { rejected = false }
                     }
                     .disabled(model.authenticating)
+                    .padding(.horizontal, 9)
+                    .frame(height: 28)
+                    .background(.white.opacity(0.025), in: RoundedRectangle(cornerRadius: 7))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 7)
+                            .strokeBorder(.white.opacity(editing ? 0.14 : 0.07))
+                            .allowsHitTesting(false)
+                    }
                 Button(model.usesPIN ? L("PIN ile aç", "Unlock with PIN") : L("Şifreyle aç", "Unlock with password"),
                        action: unlock)
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.bordered)
                     .disabled(!canSubmit || model.authenticating)
                 if rejected {
                     Text(model.usesPIN ? L("PIN yanlış. Tekrar dene.", "Incorrect PIN. Try again.")
@@ -317,8 +326,8 @@ private struct OverlayUnlockPanel: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.white.opacity(0.045), in: RoundedRectangle(cornerRadius: 16))
-        .overlay { RoundedRectangle(cornerRadius: 16).strokeBorder(.white.opacity(0.08)) }
+        .background(.white.opacity(0.03), in: RoundedRectangle(cornerRadius: 16))
+        .overlay { RoundedRectangle(cornerRadius: 16).strokeBorder(.white.opacity(0.055)) }
         .environment(\.colorScheme, .dark)
         .onChange(of: model.shown) { _, shown in
             if shown { focusPasswordField() }
