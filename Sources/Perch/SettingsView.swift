@@ -4,10 +4,25 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var settings = AppSettings.shared
     @ObservedObject var voice: VoiceNoteService
+    /// Hangi gruplar açık (yalnızca Genel açık başlar; geri kalanlar tıklayınca açılır).
+    @State private var open: Set<String> = ["general"]
+
+    private func group<Content: View>(_ id: String, _ title: String, @ViewBuilder _ content: @escaping () -> Content) -> some View {
+        Section {
+            DisclosureGroup(isExpanded: Binding(
+                get: { open.contains(id) },
+                set: { if $0 { open.insert(id) } else { open.remove(id) } }
+            )) {
+                content()
+            } label: {
+                Text(title).font(.headline)
+            }
+        }
+    }
 
     var body: some View {
         Form {
-            Section {
+            group("general", L("Genel", "General")) {
                 Picker(L("Çentik teması", "Notch theme"), selection: $settings.appearance) {
                     ForEach(NotchAppearance.allCases) { appearance in
                         Text(appearance.title).tag(appearance)
@@ -27,7 +42,7 @@ struct SettingsView: View {
                 }
             }
 
-            Section(L("Pomodoro", "Pomodoro")) {
+            group("pomodoro", "Pomodoro") {
                 Stepper(value: $settings.workMinutes, in: 1...120) {
                     Text(L("Odak süresi: \(settings.workMinutes) dk", "Focus: \(settings.workMinutes) min"))
                 }
@@ -36,7 +51,7 @@ struct SettingsView: View {
                 }
             }
 
-            Section("Away Guard (beta)") {
+            group("away", "Away Guard (beta)") {
                 Button(settings.awayUsesPIN
                        ? L("Away Guard PIN’ini değiştir…", "Change Away Guard PIN…")
                        : L("Away Guard için PIN belirle…", "Set an Away Guard PIN…")) {
@@ -52,11 +67,11 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Section(L("Yapay zekâ durumu", "AI status")) {
+            group("ai", L("Yapay zekâ durumu", "AI status")) {
                 ClaudeHookRow()
             }
 
-            Section(L("Sesli not", "Voice note")) {
+            group("voice", L("Sesli not", "Voice note")) {
                 Toggle(L("Notlar'a otomatik kaydet", "Auto-save to Notes"), isOn: $voice.autoSaveToNotes)
                 Text(L("Kısayol: ⌃⌥N (kaydı başlat/durdur)", "Shortcut: ⌃⌥N (start/stop recording)"))
                     .font(.caption)
