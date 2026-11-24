@@ -42,6 +42,9 @@ struct SettingsView: View {
                        : L("Away Guard için PIN belirle…", "Set an Away Guard PIN…")) {
                     NotificationCenter.default.post(name: .openAwayGuardPassword, object: nil)
                 }
+                Picker(L("Gizlilik ekranı teması", "Privacy screen theme"), selection: $settings.privacyTheme) {
+                    ForEach(PrivacyTheme.allCases) { Text($0.title).tag($0) }
+                }
                 Toggle(L("Gizlilik ekranına ek olarak ekranı kilitle", "Also lock the screen (password / Touch ID)"), isOn: $settings.awayAlsoLock)
                 Text(L("⌃⌥P ile gizlilik örtüsünü aç. Away Guard PIN’i örtüyü kaldırır. macOS kilidi için Mac parolan veya Touch ID gerekir.",
                        "Press ⌃⌥P to show the privacy curtain. The Away Guard PIN reveals the screen. Use your Mac password or Touch ID for the macOS lock."))

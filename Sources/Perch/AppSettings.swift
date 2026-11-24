@@ -37,6 +37,9 @@ final class AppSettings: ObservableObject {
     @Published var awayAlsoLock: Bool {
         didSet { UserDefaults.standard.set(awayAlsoLock, forKey: "awayAlsoLock") }
     }
+    @Published var privacyTheme: PrivacyTheme {
+        didSet { UserDefaults.standard.set(privacyTheme.rawValue, forKey: "privacyTheme") }
+    }
     @Published private var awayPassword: AwayGuardPassword?
     @Published var accent: AccentChoice {
         didSet { UserDefaults.standard.set(accent.rawValue, forKey: "accent") }
@@ -63,6 +66,7 @@ final class AppSettings: ObservableObject {
         accent = AccentChoice(rawValue: d.string(forKey: "accent") ?? "") ?? .white
         appearance = NotchAppearance(rawValue: d.string(forKey: "notchAppearance") ?? "") ?? .classic
         awayAlsoLock = d.bool(forKey: "awayAlsoLock")
+        privacyTheme = PrivacyTheme(rawValue: d.string(forKey: "privacyTheme") ?? "") ?? .night
         awayPassword = d.data(forKey: Self.awayPasswordKey).flatMap(AwayGuardPassword.init(data:))
 
         // Kayıtlı sıra + sonradan eklenen yeni sekmeler

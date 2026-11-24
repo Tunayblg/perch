@@ -177,12 +177,15 @@ struct OverlayContent: View {
         .frame(maxWidth: .infinity)
     }
 
+    private var theme: (top: Color, bottom: Color, glow: Color, tint: Color) {
+        AppSettings.shared.privacyTheme.palette
+    }
+
     private var backdrop: some View {
         ZStack {
-            LinearGradient(colors: [Color(red: 0.012, green: 0.012, blue: 0.035),
-                                    Color(red: 0.05, green: 0.04, blue: 0.11)],
+            LinearGradient(colors: [theme.top, theme.bottom],
                            startPoint: .top, endPoint: .bottom)
-            RadialGradient(colors: [Color(red: 0.36, green: 0.30, blue: 0.92).opacity(0.20), .clear],
+            RadialGradient(colors: [theme.glow.opacity(0.20), .clear],
                            center: .center, startRadius: 0, endRadius: 560)
         }
     }
@@ -231,9 +234,9 @@ struct OverlayContent: View {
         VStack(spacing: 5) {
             Image(systemName: "bird.fill")
                 .font(.system(size: 56))
-                .foregroundStyle(LinearGradient(colors: [.white, Color(red: 0.72, green: 0.76, blue: 1)],
+                .foregroundStyle(LinearGradient(colors: [.white, theme.tint],
                                                 startPoint: .top, endPoint: .bottom))
-                .shadow(color: Color(red: 0.5, green: 0.5, blue: 1).opacity(0.65), radius: 22)
+                .shadow(color: theme.glow.opacity(0.65), radius: 22)
             Capsule()
                 .fill(.white.opacity(0.22))
                 .frame(width: 96, height: 3)
