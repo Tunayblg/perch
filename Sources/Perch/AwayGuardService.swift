@@ -16,6 +16,14 @@ enum AwaySensitivity: String, CaseIterable, Identifiable {
         case .high: return 5
         }
     }
+    /// Masadayken (yazarken) öğrenilen alt sınırın da altına bırakılan pay (dB).
+    var margin: Int {
+        switch self {
+        case .low: return 10
+        case .medium: return 6
+        case .high: return 3
+        }
+    }
     /// Normal sinyal henüz öğrenilmediyse kullanılan sabit eşik (dBm).
     var fallbackThreshold: Int {
         switch self {
@@ -107,10 +115,22 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
     /// Masadayken öğrenilen normal sinyal (dBm); cihaz ve yerleşime göre kendiliğinden ayarlanır.
     @Published var baseline: Int?
     private var baselineValue: Double?
+    /// Masadayken (klavye/fare aktifken) görülen sinyalin alt sınırı (%10'luk dilim, dBm). Cihaza özeldir:
+    /// Apple Watch gibi oynak cihazlarda daha aşağıda çıkar, eşik de ona göre genişler.
+    @Published var floor: Int?
+    private var floorValue: Double?
+    private var activeSamples: [Double] = []
 
     /// Geçerli eşik: normal sinyalin delta dB altı (öğrenme yoksa yedek değer).
     var threshold: Int {
-        let t = baseline.map { $0 - sensitivity.delta } ?? sensitivity.fallbackThreshold
+        let t: Int
+        if let f = floor {
+            t = f - sensitivity.margin
+        } else if let b = baseline {
+            t = b - sensitivity.delta
+        } else {
+            t = sensitivity.fallbackThreshold
+        }
         return min(max(t, -95), -45)
     }
     var grace: Int { sensitivity.grace }
@@ -161,6 +181,8 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
         super.init()
         baselineValue = selectedID.flatMap { d.object(forKey: "awayBaseline." + $0.uuidString) as? Double }
         baseline = baselineValue.map { Int($0.rounded()) }
+        floorValue = selectedID.flatMap { d.object(forKey: "awayFloor." + $0.uuidString) as? Double }
+        floor = floorValue.map { Int($0.rounded()) }
         if wasEnabled && !enabled { d.set(false, forKey: "awayEnabled") }
         if enabled { refreshScanning() }
     }
@@ -191,6 +213,9 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
         seenSelected = false
         baselineValue = UserDefaults.standard.object(forKey: "awayBaseline." + device.id.uuidString) as? Double
         baseline = baselineValue.map { Int($0.rounded()) }
+        floorValue = UserDefaults.standard.object(forKey: "awayFloor." + device.id.uuidString) as? Double
+        floor = floorValue.map { Int($0.rounded()) }
+        activeSamples.removeAll()
         reset()
         refreshScanning()
     }
@@ -455,7 +480,23 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
         if id == selectedID {
             samples.append(Sample(time: now, rssi: value))
             seenSelected = true
+            if phase == .present, ScreenLocker.idleSeconds() < 2 {   // yazıyor/fare kullanıyor = kesin masada
+                activeSamples.append(Double(value))
+                if activeSamples.count > 400 { activeSamples.removeFirst(activeSamples.count - 400) }
+            }
         }
+    }
+
+    /// Uzakta mı? Tek tük düşüş sayılmaz: pencere içindeki TÜM örnekler eşiğin altında olmalı.
+    /// Paket gelmemesi tek başına yetmez (telefon uykuya girmiş olabilir): son sinyal zayıfsa kısa,
+    /// iyiyse uzun süre beklenir.
+    private func isAway(_ now: Date) -> Bool {
+        guard seenSelected, let id = selectedID else { return false }
+        let recent = samples.filter { now.timeIntervalSince($0.time) <= smoothingWindow }
+        if let best = recent.map(\.rssi).max() { return best < threshold }
+        guard let d = table[id] else { return true }
+        let silent = now.timeIntervalSince(d.lastSeen)
+        return d.rssi < threshold ? silent > lostSeconds : silent > 3 * lostSeconds
     }
 
     // MARK: - Saniyelik değerlendirme
@@ -483,18 +524,22 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
         let newSmoothed = recent.isEmpty ? nil : recent.map(\.rssi).reduce(0, +) / recent.count
         if newSmoothed != smoothed { smoothed = newSmoothed }
 
-        // Masada çalışırken normal sinyali yavaşça öğren (sen kullanırken, cihaz yakındayken)
-        if phase == .present, selectedID != nil, ScreenLocker.idleSeconds() < 5 {
-            let fresh = samples.filter { now.timeIntervalSince($0.time) <= 6 }
-            if !fresh.isEmpty {
-                let avg = Double(fresh.map(\.rssi).reduce(0, +)) / Double(fresh.count)
-                baselineValue = baselineValue.map { $0 * 0.97 + avg * 0.03 } ?? avg
-                let b = Int(baselineValue!.rounded())
-                if b != baseline { baseline = b }
-            }
+        // Masada çalışırken (klavye/fare aktif) sinyali öğren: ortalama = normal, %10'luk dilim = alt sınır.
+        if phase == .present, selectedID != nil, activeSamples.count >= 30 {
+            let sorted = activeSamples.sorted()
+            let p10 = sorted[Int(Double(sorted.count - 1) * 0.10)]
+            let mean = activeSamples.reduce(0, +) / Double(activeSamples.count)
+            let rate = floorValue == nil ? 1.0 : 0.1
+            floorValue = floorValue.map { $0 * (1 - rate) + p10 * rate } ?? p10
+            baselineValue = baselineValue.map { $0 * (1 - rate) + mean * rate } ?? mean
+            let f = Int(floorValue!.rounded()), bl = Int(baselineValue!.rounded())
+            if f != floor { floor = f }
+            if bl != baseline { baseline = bl }
+            activeSamples.removeAll(keepingCapacity: true)
         }
-        if tickCount % 60 == 0, let id = selectedID, let v = baselineValue {
-            UserDefaults.standard.set(v, forKey: "awayBaseline." + id.uuidString)
+        if tickCount % 60 == 0, let id = selectedID {
+            if let v = baselineValue { UserDefaults.standard.set(v, forKey: "awayBaseline." + id.uuidString) }
+            if let v = floorValue { UserDefaults.standard.set(v, forKey: "awayFloor." + id.uuidString) }
         }
 
         guard selectedID != nil || phase != .present else { return }
@@ -508,9 +553,7 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
                       now.timeIntervalSince(last.time) < 4, last.rssi >= threshold + 2 else { return }
                 waitingForDeviceSince = nil
             }
-            let lost = seenSelected && (lastSeen.map { now.timeIntervalSince($0) > lostSeconds } ?? true)
-            let weak = smoothed.map { $0 < threshold } ?? false
-            let away = seenSelected && (lost || weak)        // cihaz hiç görülmediyse örtme
+            let away = isAway(now)                           // cihaz hiç görülmediyse örtme
             let userActive = ScreenLocker.userIsEngaged(threshold: 5) // klavye/fare/video: kullanıyor
             let hold = away && userActive
             if hold != holdingOff { holdingOff = hold }
@@ -524,9 +567,7 @@ final class AwayGuardService: NSObject, ObservableObject, CBCentralManagerDelega
             }
 
         case .countdown:
-            let lost = seenSelected && (lastSeen.map { now.timeIntervalSince($0) > lostSeconds } ?? true)
-            let weak = smoothed.map { $0 < threshold } ?? false
-            let away = seenSelected && (lost || weak)
+            let away = isAway(now)
             let userActive = ScreenLocker.userIsEngaged(threshold: 3)
             if !testing, !away || userActive {
                 cancelCountdown()
