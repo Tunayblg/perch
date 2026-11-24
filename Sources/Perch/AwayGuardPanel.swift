@@ -196,11 +196,12 @@ struct AwayGuardPanel: View {
 
     private var rightColumn: some View {
         VStack(spacing: 6) {
-            HStack(alignment: .firstTextBaseline) {
+            HStack {
                 Text(paused ? "—" : (away.smoothed.map { "\($0) dBm" } ?? "—"))
-                    .font(.system(size: 20, weight: .semibold).monospacedDigit())
-                    .foregroundStyle(.white)
+                    .font(.system(size: 14, weight: .medium).monospacedDigit())
+                    .foregroundStyle(.white.opacity(0.85))
                     .fixedSize()
+                    .frame(minWidth: 60, alignment: .leading)
                 Spacer()
                 previewChip
                 testChip
@@ -208,8 +209,9 @@ struct AwayGuardPanel: View {
                     .font(.system(size: 10).monospacedDigit())
                     .foregroundStyle(.white.opacity(0.45))
             }
+            .frame(height: 22)
 
-            RSSIGraph(samples: paused ? [] : away.samples, threshold: away.threshold, baseline: away.baseline,
+            RSSIGraph(samples: paused ? [] : away.samples, threshold: away.threshold,
                       isAway: away.smoothed.map { $0 < away.threshold } ?? false, accent: accent)
                 .frame(height: 50)
                 .overlay {
@@ -323,28 +325,20 @@ struct AwayGuardPanel: View {
 struct RSSIGraph: View {
     let samples: [AwayGuardService.Sample]
     let threshold: Int
-    let baseline: Int?
     let isAway: Bool
     let accent: Color
 
     private let window: TimeInterval = 60
 
     var body: some View {
-        // Yalnızca sekme açıkken çizilir. Eğri 60 sn'de ~280 px kaydığı için 10 fps akıcı görünür ve ucuzdur
-        TimelineView(.animation(minimumInterval: 0.1)) { ctx in
-            Canvas { gc, size in draw(gc, size, ctx.date) }
+        Canvas { gc, size in
+            draw(gc, size)
         }
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
-    /// Dikey aralık normal sinyale göre ortalanır; yoksa sabit aralık.
-    private var range: (lo: Double, hi: Double) {
-        if let b = baseline { return (Double(b) - 34, Double(b) + 10) }
-        return (-98, -38)
-    }
-
-    private func draw(_ gc: GraphicsContext, _ size: CGSize, _ now: Date) {
-        let (lo, hi) = range
+    private func draw(_ gc: GraphicsContext, _ size: CGSize) {
+        let (lo, hi) = (-100.0, -30.0)
         func y(_ v: Double) -> CGFloat {
             let t = (min(max(v, lo), hi) - lo) / (hi - lo)
             return size.height * 0.07 + size.height * 0.86 * (1 - CGFloat(t))
@@ -364,13 +358,16 @@ struct RSSIGraph: View {
         dash.addLine(to: CGPoint(x: size.width, y: ty))
         gc.stroke(dash, with: .color(.orange.opacity(0.7)), style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
 
+        // The graph stays in place between actual Bluetooth readings.
+        guard let latest = samples.last?.time else { return }
+        let plotWidth = max(0, size.width - 7)
         // Örnekleri yumuşatılmış noktalara çevir; 4 sn'den uzun boşlukta çizgiyi böl
         var runs: [[CGPoint]] = []
         var current: [CGPoint] = []
         var smoothedValue: Double?
         var previous: Date?
         for s in samples {
-            let age = now.timeIntervalSince(s.time)
+            let age = latest.timeIntervalSince(s.time)
             guard age <= window else { continue }
             if let p = previous, s.time.timeIntervalSince(p) > 4 {
                 if !current.isEmpty { runs.append(current) }
@@ -379,7 +376,7 @@ struct RSSIGraph: View {
             }
             let v = smoothedValue.map { $0 * 0.55 + Double(s.rssi) * 0.45 } ?? Double(s.rssi)
             smoothedValue = v
-            current.append(CGPoint(x: size.width * CGFloat(1 - age / window), y: y(v)))
+            current.append(CGPoint(x: plotWidth * CGFloat(1 - age / window), y: y(v)))
             previous = s.time
         }
         if !current.isEmpty { runs.append(current) }

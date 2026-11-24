@@ -47,13 +47,6 @@ struct NotchView: View {
     var body: some View {
         let size = state.expanded ? state.expandedSize : state.collapsedSize
         ZStack(alignment: .top) {
-            NotchBackground(
-                expanded: state.expanded,
-                glass: settings.appearance == .liquidGlass,
-                reduceTransparency: reduceTransparency
-            )
-            .allowsHitTesting(false)
-
             if state.expanded {
                 VStack(spacing: 0) {
                     header
@@ -98,7 +91,15 @@ struct NotchView: View {
                 }
             }
         }
-        .frame(width: size.width, height: size.height)
+        .frame(width: size.width, height: size.height, alignment: .top)
+        .background {
+            NotchBackground(
+                expanded: state.expanded,
+                glass: settings.appearance == .liquidGlass,
+                reduceTransparency: reduceTransparency
+            )
+            .allowsHitTesting(false)
+        }
         .overlay(alignment: .bottomTrailing) {
             if state.expanded {
                 tabVisibilityControl(for: effectiveTab)
