@@ -39,6 +39,7 @@ struct NotchView: View {
     @ObservedObject var stats: StatsService
     @ObservedObject var clipboard: ClipboardService
     @ObservedObject var awayGuard: AwayGuardService
+    @ObservedObject var ai: AIStatusService
     @ObservedObject var settings = AppSettings.shared
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var hideNotice: UUID?
@@ -81,6 +82,9 @@ struct NotchView: View {
                         .transition(.opacity)
                 } else if let c = awayGuard.countdown {
                     collapsedBadge(icon: "lock.fill", text: "\(c)", tint: .orange)
+                        .transition(.opacity)
+                } else if ai.state != .idle {
+                    aiBadge
                         .transition(.opacity)
                 } else if let badge = planner.badge {
                     collapsedBadge(icon: badge.icon, text: badge.text)
@@ -190,6 +194,26 @@ struct NotchView: View {
         .buttonStyle(.plain)
         .animation(.smooth(duration: 0.2), value: active)
         .help(tab.title)
+    }
+
+    /// Claude çalışırken/bitince: solda Claude işareti, sağda durum; ortada fiziksel çentik.
+    private var aiBadge: some View {
+        HStack(spacing: 0) {
+            ClaudeMark(size: 16)
+                .opacity(ai.state == .working ? 0.75 : 1)
+                .frame(width: state.badgeWidth)
+            Spacer().frame(width: state.notchSize.width)
+            Group {
+                switch ai.state {
+                case .done: Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                case .waiting: Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.orange)
+                default: Image(systemName: "ellipsis").foregroundStyle(.white.opacity(0.7)).symbolEffect(.pulse)
+                }
+            }
+            .font(.system(size: 13, weight: .semibold))
+            .frame(width: state.badgeWidth)
+        }
+        .frame(height: state.notchSize.height)
     }
 
     /// Şarkı çalarken: solda kapak, sağda ses animasyonu; ortada fiziksel çentik.

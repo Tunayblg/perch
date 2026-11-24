@@ -52,6 +52,10 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
+            Section(L("Yapay zekâ durumu", "AI status")) {
+                ClaudeHookRow()
+            }
+
             Section(L("Sesli not", "Voice note")) {
                 Toggle(L("Notlar'a otomatik kaydet", "Auto-save to Notes"), isOn: $voice.autoSaveToNotes)
                 Text(L("Kısayol: ⌃⌥N (kaydı başlat/durdur)", "Shortcut: ⌃⌥N (start/stop recording)"))
@@ -232,5 +236,31 @@ private struct AwayGuardPasswordEditor: View {
             return
         }
         close(true)
+    }
+}
+
+private struct ClaudeHookRow: View {
+    @State private var installed = ClaudeHookInstaller.isInstalled
+    @State private var error: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                ClaudeMark(size: 14)
+                Text(installed ? L("Claude Code bağlı", "Claude Code connected")
+                     : L("Claude bitince çentikte göster", "Show in the notch when Claude finishes"))
+                Spacer()
+                if !installed {
+                    Button(L("Bağla", "Connect")) {
+                        error = ClaudeHookInstaller.install()
+                        installed = ClaudeHookInstaller.isInstalled
+                    }
+                }
+            }
+            if let error { Text(error).font(.caption).foregroundStyle(.red) }
+            Text(L("~/.claude/settings.json dosyasına hook ekler; önce yedeğini alır.",
+                   "Adds hooks to ~/.claude/settings.json; a backup is made first."))
+                .font(.caption).foregroundStyle(.secondary)
+        }
     }
 }

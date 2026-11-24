@@ -107,7 +107,7 @@ enum PreviewRenderer {
         stats.diskTotal = 494_000_000_000
         let view = NotchView(state: state, music: sampleMusic(), planner: samplePlanner(), todos: TodoStore(),
                              shelf: ShelfStore(), voice: VoiceNoteService(), stats: stats,
-                             clipboard: ClipboardService(), awayGuard: sampleAway())
+                             clipboard: ClipboardService(), awayGuard: sampleAway(), ai: AIStatusService(watching: false))
         return Desktop { view.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top) }
     }
 

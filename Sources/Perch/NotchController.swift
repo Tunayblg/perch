@@ -58,6 +58,7 @@ final class NotchController {
     let voice = VoiceNoteService()
     let stats = StatsService()
     let clipboard = ClipboardService()
+    let ai = AIStatusService()
     let awayGuard = AwayGuardService()
     private var hotKey: GlobalHotKey?
     private var privacyHotKey: GlobalHotKey?
@@ -90,7 +91,7 @@ final class NotchController {
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         panel.isMovable = false
 
-        let host = NSHostingView(rootView: NotchView(state: state, music: music, planner: planner, todos: todos, shelf: shelf, voice: voice, stats: stats, clipboard: clipboard, awayGuard: awayGuard))
+        let host = NSHostingView(rootView: NotchView(state: state, music: music, planner: planner, todos: todos, shelf: shelf, voice: voice, stats: stats, clipboard: clipboard, awayGuard: awayGuard, ai: ai))
         host.layer?.backgroundColor = .clear
         panel.contentView = host
         panel.orderFrontRegardless()
@@ -121,6 +122,8 @@ final class NotchController {
         planner.$timers.combineLatest(planner.$phase, music.$isPlaying, voice.$isRecording)
             .map { !$0.isEmpty || $1 != .idle || $2 || $3 }
             .combineLatest(awayGuard.$countdown.map { $0 != nil })
+            .map { $0 || $1 }
+            .combineLatest(ai.$state.map { $0 != .idle })
             .map { $0 || $1 }
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
